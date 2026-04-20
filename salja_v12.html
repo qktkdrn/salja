@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>살자 v8</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--a:#1a1a1a;--al:#f4f4f2;--ab:#ddd;--am:#888;--ex:linear-gradient(90deg,#555,#888);--br:#555;}
+.dark{--a:#e8e8e4;--al:#2a2a2a;--ab:#444;--am:#aaa;--ex:linear-gradient(90deg,#e8e8e4,#aaa);--br:#e8e8e4;}
+.dark body{background:#111;}
+.dark .phone{background:#121212;border-color:#333;}
+.dark .tb,.dark .hbody,.dark .scr{background:#121212;}
+.dark .tbar,.dark .htab,.dark .bnav{background:#1e1e1e;border-color:#333;}
+.dark .qi,.dark .cbar,.dark .fc,.dark .tc,.dark .jc,.dark .rc,.dark .aic{background:#1e1e1e;border-color:#333;}
+.dark .sec,.dark .citbar{border-color:#333;}
+.dark .qt,.dark .hnm{color:#e8e8e4;}
+.dark .wcard{background:#000;}
+.dark input,.dark textarea,.dark select{background:#2a2a2a;color:#e8e8e4;border-color:#444;}
+.tm{--a:#1a3a5c;--al:#eef3f8;--ab:#b8d0e8;--am:#5a7fa0;--ex:linear-gradient(90deg,#1a3a5c,#2d6a4f);--br:#1a3a5c;}
+.tf{--a:#b5635a;--al:#fdf5f4;--ab:#e8ccc8;--am:#c9847a;--ex:linear-gradient(90deg,#b5635a,#c9847a);--br:#b5635a;}
+body{background:#e8e8e4;display:flex;justify-content:center;min-height:100vh;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;}
+.phone{width:390px;background:#f9f9f7;border-radius:24px;overflow:hidden;display:flex;flex-direction:column;border:1px solid #e8e8e4;min-height:720px;position:relative;user-select:none;}
+.scr{display:none;flex-direction:column;flex:1;}.scr.on{display:flex;}
+.bp{width:100%;background:var(--a);color:#fff;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:600;cursor:pointer;}
+.bp:disabled{background:#e0e0dc;color:#bbb;}
+.bsm{background:var(--a);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;font-weight:500;}
+.sbar{display:flex;gap:5px;padding:20px 24px 0;flex-shrink:0;}
+.sd{flex:1;height:3px;border-radius:2px;background:#e8e8e4;}.sd.on{background:var(--a);}.sd.dn{background:var(--am);}
+.si{padding:24px 22px 20px;display:flex;flex-direction:column;overflow-y:auto;flex:1;}
+.tbar{background:#f9f9f7;padding:13px 18px 11px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #efefeb;flex-shrink:0;}
+.ebar{height:5px;background:#efefeb;border-radius:3px;overflow:hidden;}
+.ef{height:100%;background:var(--ex);border-radius:3px;transition:width .7s;}
+.badge{display:inline-flex;align-items:center;background:#f4f4f2;border:1px solid #e8e8e4;border-radius:20px;padding:2px 8px;}
+.badge span{color:#666;font-size:8px;font-weight:500;}
+.bga{background:var(--al);border-color:var(--ab);}.bga span{color:var(--a);}
+.bgb{background:#fdf8f0;border-color:#e8d4a0;}.bgb span{color:#a07020;}
+.gbadge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--al);color:var(--a);border:1px solid var(--ab);}
+.htab{display:flex;background:#fff;border-bottom:1px solid #efefeb;flex-shrink:0;}
+.ht{flex:1;padding:11px 0;font-size:11px;font-weight:600;color:#bbb;border:none;background:none;cursor:pointer;border-bottom:2.5px solid transparent;text-align:center;}
+.ht.on{color:var(--a);border-bottom-color:var(--a);}
+.tb{flex:1;overflow-y:auto;background:#f9f9f7;}
+.sec{padding:14px 18px;border-bottom:1px solid #efefeb;}
+.slbl{font-size:10px;font-weight:700;color:#bbb;letter-spacing:1.5px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.hbody{display:flex;flex-direction:column;padding:14px 18px;gap:12px;}
+.cbar{background:#fff;border-radius:13px;border:1px solid #efefeb;padding:12px 16px;display:flex;align-items:center;gap:12px;}
+.cmult{border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;background:#f4f4f2;color:#888;}
+.cmult.on{background:var(--al);color:var(--a);}
+.wcard{background:#1a1a1a;border-radius:13px;padding:14px 16px;display:grid;grid-template-columns:repeat(4,1fr);}
+.wi{text-align:center;padding:0 2px;}.wi+.wi{border-left:1px solid #333;}
+.wv{font-size:17px;font-weight:800;color:#fff;display:block;}
+.wl{font-size:8px;color:#777;display:block;margin-top:3px;}
+.qi{background:#fff;border-radius:13px;border:1px solid #efefeb;margin-bottom:8px;overflow:hidden;}
+.qi.op{border-color:var(--a);}.qi.ce{border-color:#b7d4c0;}.qi.tp{border-color:#e0d0a8;background:#fffdf5;}
+.qm{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;}
+.qck{width:22px;height:22px;border-radius:50%;border:1.5px solid #ddd;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;}
+.qck.dn{background:#f0f0ee;border-color:#bbb;color:#999;}
+.qck.ok{background:var(--a);border-color:var(--a);}
+.qck.ok::after{content:'';display:block;width:5px;height:3px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px);}
+.qck.sq{border-radius:5px;}.qck.sq.ok{background:#3a7a5a;border-color:#3a7a5a;border-radius:5px;}
+.qck.sq.ok::after{content:'';display:block;width:5px;height:3px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px);}
+.qb{flex:1;min-width:0;}
+.qt{font-size:12px;color:#1a1a1a;font-weight:500;line-height:1.4;}
+.qs{font-size:9px;color:#bbb;margin-top:2px;}
+.xt{font-size:9px;font-weight:600;padding:2px 8px;border-radius:10px;flex-shrink:0;white-space:nowrap;}
+.xt.no{background:#f4f4f2;color:#bbb;}.xt.pe{background:#fdf8f0;color:#a07020;}
+.xt.ok{background:#eef5ee;color:#3a7a5a;}.xt.cm{background:var(--al);color:var(--a);}
+.xt.cr{background:#fdf8f0;color:#a07020;}
+.cpan{display:none;border-top:1.5px dashed #efefeb;background:#f9f9f7;padding:13px 14px;}
+.cpan.on{display:block;}
+.ctabs{display:flex;gap:7px;margin-bottom:11px;}
+.ct{flex:1;text-align:center;padding:9px 4px 7px;border-radius:10px;border:1.5px solid #e8e8e4;background:#fff;cursor:pointer;}
+.ct.sp{border-color:#3a7a5a;background:#eef5ee;}.ct.st{border-color:var(--a);background:var(--al);}.ct.sn{border-color:#999;background:#f4f4f2;}
+.pbox{width:100%;height:60px;background:#fff;border:2px dashed #e8e8e4;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;margin-bottom:8px;}
+.pbox.up{border:2px solid #3a7a5a;background:#eef5ee;}
+.cta{width:100%;background:#fff;border:1.5px solid #e8e8e4;border-radius:9px;padding:9px 12px;color:#1a1a1a;font-size:11px;outline:none;resize:none;height:50px;font-family:inherit;line-height:1.6;}
+.cta.ok{border-color:#3a7a5a;}
+.chint{font-size:9px;color:#bbb;text-align:right;margin-top:4px;margin-bottom:8px;}
+.chint.ok{color:#3a7a5a;font-weight:600;}
+.cbtn{width:100%;padding:12px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:not-allowed;background:#e8e8e4;color:#bbb;}
+.cbtn.rp{background:#3a7a5a;color:#fff;cursor:pointer;}
+.cbtn.rt{background:var(--a);color:#fff;cursor:pointer;}
+.cbtn.rn{background:#1a1a1a;color:#fff;cursor:pointer;}
+.tform{background:#fff;border-radius:13px;padding:14px;margin-bottom:10px;border:1.5px solid var(--a);}
+.tform input{width:100%;background:#f9f9f7;border:1px solid #e8e8e4;border-radius:8px;padding:9px 11px;color:#1a1a1a;font-size:12px;outline:none;margin-bottom:8px;}
+.ctb{flex:1;display:flex;flex-direction:column;background:#f9f9f7;overflow:hidden;}
+.citbar{display:flex;background:#fff;border-bottom:1px solid #efefeb;flex-shrink:0;}
+.itb{flex:1;padding:10px 0;font-size:10px;font-weight:600;color:#bbb;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;}
+.itb.on{color:var(--a);border-bottom-color:var(--a);}
+.cpanel{flex:1;overflow-y:auto;display:none;}.cpanel.on{display:block;}
+.fc{background:#fff;border-radius:14px;margin:8px 16px;border:1px solid #efefeb;overflow:hidden;}
+.fhdr{display:flex;align-items:center;gap:8px;padding:11px 13px 7px;}
+.fav{width:36px;height:36px;border-radius:50%;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;border:1px solid var(--ab);}
+.ftag{border-radius:20px;padding:2px 8px;font-size:9px;font-weight:600;flex-shrink:0;}
+.ftag.h{background:var(--al);color:var(--a);}.ftag.t{background:#fdf8f0;color:#a07020;}
+.fqb{margin:0 13px 8px;background:#f9f9f7;border-radius:9px;padding:8px 11px;border:1px solid #efefeb;}
+.fqn{font-size:12px;color:#1a1a1a;font-weight:600;}
+.fact{padding:6px 13px 12px;display:flex;align-items:center;gap:8px;}
+.vbtn{display:flex;align-items:center;gap:4px;background:#f9f9f7;border:1.5px solid #e8e8e4;border-radius:20px;padding:6px 12px;font-size:11px;font-weight:600;color:#666;cursor:pointer;}
+.vbtn.ok{background:#eef5ee;border-color:#b0d4b8;color:#3a7a5a;}
+.xok{display:flex;align-items:center;margin-left:auto;background:#eef5ee;border:1px solid #b0d4b8;border-radius:20px;padding:4px 9px;}
+.xok span{font-size:9px;color:#3a7a5a;font-weight:600;}
+.xpe{display:flex;align-items:center;margin-left:auto;background:#fdf8f0;border:1px solid #e0d0a8;border-radius:20px;padding:4px 9px;}
+.xpe span{font-size:9px;color:#a07020;font-weight:600;}
+.vbg{font-size:8px;background:#eef5ee;border:1px solid #b0d4b8;color:#3a7a5a;border-radius:20px;padding:1px 6px;font-weight:600;margin-left:3px;}
+.cmem{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #efefeb;}.cmem:last-child{border-bottom:none;}
+.gav{width:34px;height:34px;border-radius:50%;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;border:1px solid var(--ab);}
+.gbg{height:4px;background:#efefeb;border-radius:2px;overflow:hidden;margin-top:3px;}
+.gbf{height:100%;background:var(--br);border-radius:2px;}
+.chatb{background:#f4f4f2;border-radius:12px;padding:10px;height:130px;overflow-y:auto;margin-bottom:8px;}
+.cm{margin-bottom:8px;}.cmn{font-size:9px;color:#bbb;margin-bottom:2px;}
+.cmt{background:#fff;border-radius:10px;padding:6px 11px;font-size:11px;color:#444;display:inline-block;max-width:88%;line-height:1.5;border:1px solid #efefeb;}
+.cm.me{text-align:right;}.cm.me .cmt{background:var(--a);color:#fff;border-color:var(--a);}
+.chinp{flex:1;background:#fff;border:1px solid #e8e8e4;border-radius:9px;padding:9px 11px;color:#1a1a1a;font-size:11px;outline:none;}
+.jc{background:#fff;border:1.5px solid #efefeb;border-radius:14px;padding:13px 10px 11px;cursor:pointer;text-align:left;position:relative;}
+.jc:active{transform:scale(.97);}
+.jc.cur{border-color:var(--a);background:var(--al);}
+.jc.t2{border-left:3px solid #2d6a4f;}.jc.t3{border-left:3px solid #f0a500;}
+.jbt{position:absolute;top:7px;right:7px;font-size:8px;padding:2px 6px;border-radius:7px;font-weight:600;}
+.jbt.c{background:var(--a);color:#fff;}.jbt.n{background:#3a7a5a;color:#fff;}.jbt.l{background:#e8e8e4;color:#999;}
+.rc{background:#fff;border-radius:14px;margin:8px 16px;border:1px solid #efefeb;padding:15px;}
+.rcd{background:#1a1a1a;border-radius:14px;margin:8px 16px;padding:16px;color:#fff;}
+.aic{background:var(--al);border:1px solid var(--ab);border-radius:12px;padding:12px 15px;margin:8px 16px;}
+.bchart{display:flex;align-items:flex-end;gap:5px;height:60px;margin-bottom:7px;}
+.bw{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;}
+.bc{width:100%;border-radius:5px 5px 0 0;}
+.ri{display:flex;align-items:center;gap:10px;margin-bottom:9px;}.ri:last-child{margin-bottom:0;}
+.rib{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.rbg2{height:4px;background:#efefeb;border-radius:3px;overflow:hidden;}
+.rbf{height:100%;border-radius:3px;}
+.tc{background:#fff;border-radius:12px;border:1px solid #efefeb;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.tc.lk{opacity:.38;}
+.tib2{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.tr{font-size:8px;font-weight:700;padding:2px 7px;border-radius:18px;align-self:flex-start;flex-shrink:0;}
+.tr.S{background:#fff0ec;color:#b05040;}.tr.A{background:#fdf8f0;color:#a07020;}
+.tr.B{background:#eef5ee;color:#3a7a5a;}.tr.C{background:#f4f4f2;color:#666;}
+.ov{display:none;position:absolute;top:0;left:0;right:0;bottom:0;border-radius:24px;z-index:100;flex-direction:column;}
+.ov.on{display:flex;}
+.mov{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);border-radius:24px;z-index:200;align-items:flex-end;}
+.mov.on{display:flex;}
+.ms{background:#fff;border-radius:20px 20px 0 0;width:100%;padding:18px 20px 32px;max-height:85%;overflow-y:auto;}
+.bnav{display:flex;padding:9px 0 7px;border-top:1px solid #efefeb;flex-shrink:0;background:#fff;}
+.ni{flex:1;text-align:center;font-size:8px;color:#ccc;cursor:pointer;padding:2px;}
+.ni.on{color:var(--a);}
+.nic{font-size:19px;display:block;margin-bottom:2px;}
+</style>
+</head>
+<body>
+<div style="position:relative;width:390px;" id="wrap">
+<div class="phone" id="phone">
+
+<div class="scr on" id="s-splash" style="align-items:center;justify-content:center;background:#f9f9f7;">
+  <div style="text-align:center;padding:0 44px;width:100%;">
+    <svg width="100" height="100" viewBox="0 0 1024 1024" fill="none" style="margin:0 auto 20px;display:block;">
+      <circle cx="512" cy="512" r="300" stroke="#1a1a1a" stroke-width="36"/>
+      <path d="M300 512H420L470 450L520 580L570 480H720" stroke="#1a1a1a" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="720" cy="512" r="16" fill="#1a1a1a"/>
+    </svg>
+    <div style="color:#1a1a1a;font-size:40px;font-weight:800;letter-spacing:12px;margin-bottom:6px;">살자</div>
+    <div style="color:#bbb;font-size:11px;letter-spacing:5px;margin-bottom:56px;">S A L J A</div>
+    <button class="bp" onclick="gTo('s-gender')" style="font-size:16px;padding:17px;border-radius:16px;">시작하기 →</button>
+  </div>
+</div>
+
+<div class="scr" id="s-gender">
+  <div class="sbar"><div class="sd on"></div><div class="sd"></div><div class="sd"></div><div class="sd"></div><div class="sd"></div><div class="sd"></div></div>
+  <div class="si">
+    <div style="color:#1a1a1a;font-size:22px;font-weight:700;margin-bottom:6px;">성별을 선택하세요</div>
+    <div style="color:#999;font-size:13px;margin-bottom:18px;">선택에 따라 직업군과 색상이 달라져요</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="background:#eef3f8;border:1px solid #b8d0e8;border-radius:12px;padding:10px 12px;">
+        <div style="font-size:11px;font-weight:800;color:#1a3a5c;margin-bottom:5px;">🔵 남자</div>
+        <div style="font-size:9px;color:#5a7fa0;line-height:1.8;">🪨원석 → ⚙️단련<br>→ ⚡각성 → 🏔️정복</div>
+      </div>
+      <div style="background:#fdf5f4;border:1px solid #e8ccc8;border-radius:12px;padding:10px 12px;">
+        <div style="font-size:11px;font-weight:800;color:#b5635a;margin-bottom:5px;">🌸 여자</div>
+        <div style="font-size:9px;color:#c9847a;line-height:1.8;">🌱씨앗 → 🌿새싹<br>→ 🌸꽃 → 🍊열매</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="background:#fff;border:1.5px solid #e8e8e4;border-radius:18px;padding:22px 12px 18px;cursor:pointer;text-align:center;" id="gc-m" onclick="selG(this,'m')">
+        <div style="font-size:44px;margin-bottom:10px;">🧔</div>
+        <div style="color:#1a1a1a;font-size:15px;font-weight:600;margin-bottom:3px;">남자</div>
+        <div style="color:#999;font-size:10px;">도전·극복·성취의 여정</div>
+      </div>
+      <div style="background:#fff;border:1.5px solid #e8e8e4;border-radius:18px;padding:22px 12px 18px;cursor:pointer;text-align:center;" id="gc-f" onclick="selG(this,'f')">
+        <div style="font-size:44px;margin-bottom:10px;">👩</div>
+        <div style="color:#1a1a1a;font-size:15px;font-weight:600;margin-bottom:3px;">여자</div>
+        <div style="color:#999;font-size:10px;">성장·웰니스·감성의 여정</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:0 22px 36px;flex-shrink:0;"><button class="bp" id="btn-g" onclick="gTo('s-class')" disabled>다음</button></div>
+</div>
+
+<div class="scr" id="s-class">
+  <div class="sbar"><div class="sd dn"></div><div class="sd on"></div><div class="sd"></div><div class="sd"></div><div class="sd"></div><div class="sd"></div></div>
+  <div class="si">
+    <div style="color:#1a1a1a;font-size:22px;font-weight:700;margin-bottom:4px;">나의 갓생 정체성</div>
+    <div style="color:#999;font-size:12px;margin-bottom:14px;" id="csub">시작 직업을 골라봐요</div>
+    <div style="background:#fff;border-radius:13px;padding:12px 14px;border:1px solid #efefeb;margin-bottom:14px;display:flex;align-items:center;justify-content:space-around;" id="gbar"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;" id="cgrid"></div>
+    <div id="sbox" style="display:none;background:#fff;border-radius:13px;padding:14px;border:1px solid var(--ab);">
+      <div style="font-size:9px;font-weight:700;color:var(--a);letter-spacing:1px;margin-bottom:6px;">✨ 나의 갓생 스토리</div>
+      <div id="stxt" style="font-size:12px;color:#444;line-height:1.7;"></div>
+    </div>
+  </div>
+  <div style="padding:0 22px 36px;flex-shrink:0;"><button class="bp" id="btn-c" onclick="gTo('s-goal')" disabled>다음</button></div>
+</div>
+
+<div class="scr" id="s-goal">
+  <div class="sbar"><div class="sd dn"></div><div class="sd dn"></div><div class="sd on"></div><div class="sd"></div><div class="sd"></div></div>
+  <div class="si">
+    <div style="color:#1a1a1a;font-size:22px;font-weight:700;margin-bottom:6px;">왜 갓생을 살고 싶어요?</div>
+    <div style="color:#999;font-size:13px;margin-bottom:20px;">목표에 따라 맞춤 루틴을 추천해드려요</div>
+    <div style="display:flex;flex-direction:column;gap:10px;" id="goal-list">
+      <div class="goal-card" onclick="selGoal(this,'health')" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:14px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:32px;">💪</div>
+        <div><div style="color:#1a1a1a;font-size:13px;font-weight:700;margin-bottom:3px;">건강 & 다이어트</div><div style="color:#999;font-size:11px;">운동 루틴으로 몸과 마음을 단련해요</div></div>
+      </div>
+      <div class="goal-card" onclick="selGoal(this,'study')" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:14px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:32px;">📚</div>
+        <div><div style="color:#1a1a1a;font-size:13px;font-weight:700;margin-bottom:3px;">자기계발 & 취업준비</div><div style="color:#999;font-size:11px;">매일 배우고 성장하는 습관을 만들어요</div></div>
+      </div>
+      <div class="goal-card" onclick="selGoal(this,'mindful')" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:14px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:32px;">🧘</div>
+        <div><div style="color:#1a1a1a;font-size:13px;font-weight:700;margin-bottom:3px;">멘탈 & 웰니스</div><div style="color:#999;font-size:11px;">마음의 평화와 균형 잡힌 삶을 살아요</div></div>
+      </div>
+      <div class="goal-card" onclick="selGoal(this,'create')" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:14px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:32px;">🎨</div>
+        <div><div style="color:#1a1a1a;font-size:13px;font-weight:700;margin-bottom:3px;">창작 & 콘텐츠</div><div style="color:#999;font-size:11px;">나만의 작품과 콘텐츠를 만들어가요</div></div>
+      </div>
+      <div class="goal-card" onclick="selGoal(this,'rich')" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:14px;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:32px;">📈</div>
+        <div><div style="color:#1a1a1a;font-size:13px;font-weight:700;margin-bottom:3px;">재테크 & 커리어</div><div style="color:#999;font-size:11px;">경제적 자유와 커리어 성장을 목표로 해요</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:0 22px 36px;flex-shrink:0;"><button class="bp" id="btn-goal" onclick="gTo('s-crew-type')" disabled>다음</button></div>
+</div>
+
+<div class="scr" id="s-crew-type">
+  <div class="sbar"><div class="sd dn"></div><div class="sd dn"></div><div class="sd dn"></div><div class="sd dn"></div><div class="sd on"></div><div class="sd"></div></div>
+  <div class="si">
+    <div style="color:#1a1a1a;font-size:22px;font-weight:700;margin-bottom:6px;">어떻게 시작할까요?</div>
+    <div style="color:#999;font-size:13px;margin-bottom:20px;">나중에 언제든지 바꿀 수 있어요</div>
+
+    <!-- 솔로 -->
+    <div class="crew-type-card" id="ct-solo" onclick="selCrewType(this,'solo')" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:16px;padding:18px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:16px;">
+      <div style="width:52px;height:52px;border-radius:14px;background:#f4f4f2;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">🧘</div>
+      <div style="flex:1;">
+        <div style="color:#1a1a1a;font-size:14px;font-weight:700;margin-bottom:4px;">혼자 시작할게요</div>
+        <div style="color:#999;font-size:11px;line-height:1.6;">솔로 모드 · 전국 랭킹으로 동기부여<br>나중에 크루 합류 가능해요</div>
+      </div>
+      <div style="font-size:20px;">→</div>
+    </div>
+
+    <!-- 지인 크루 -->
+    <div class="crew-type-card" id="ct-friend" onclick="selCrewType(this,'friend')" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:16px;padding:18px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:16px;">
+      <div style="width:52px;height:52px;border-radius:14px;background:#eef5ee;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">👥</div>
+      <div style="flex:1;">
+        <div style="color:#1a1a1a;font-size:14px;font-weight:700;margin-bottom:4px;">지인이랑 크루 만들기</div>
+        <div style="color:#999;font-size:11px;line-height:1.6;">비공개 크루 · 친구/직장동료/연인<br>초대 링크로 불러오기</div>
+      </div>
+      <div style="font-size:20px;">→</div>
+    </div>
+
+    <!-- 공개 크루 -->
+    <div class="crew-type-card" id="ct-public" onclick="selCrewType(this,'public')" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:16px;padding:18px;cursor:pointer;display:flex;align-items:center;gap:16px;">
+      <div style="width:52px;height:52px;border-radius:14px;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">🌐</div>
+      <div style="flex:1;">
+        <div style="color:#1a1a1a;font-size:14px;font-weight:700;margin-bottom:4px;">공개 크루 참여하기</div>
+        <div style="color:#999;font-size:11px;line-height:1.6;">인플루언서 크루 · 같은 목표 사람들<br>전국에서 모인 갓생러들과 함께</div>
+      </div>
+      <div style="font-size:20px;">→</div>
+    </div>
+  </div>
+  <div style="padding:0 22px 36px;flex-shrink:0;"><button class="bp" id="btn-crew-type" onclick="gTo('s-nick')" disabled>다음</button></div>
+</div>
+
+<div class="scr" id="s-nick">
+  <div class="sbar"><div class="sd dn"></div><div class="sd dn"></div><div class="sd dn"></div><div class="sd dn"></div><div class="sd on"></div><div class="sd"></div></div>
+  <div class="si">
+    <div style="color:#1a1a1a;font-size:22px;font-weight:700;margin-bottom:6px;">캐릭터를 만들어요</div>
+    <div style="color:#999;font-size:13px;margin-bottom:20px;">아바타와 닉네임을 선택하세요</div>
+    <div style="width:86px;height:86px;border-radius:50%;background:#fff;border:2px solid #e8e8e4;display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 20px;" id="nav">🌱</div>
+    <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:none;" id="avrow"></div>
+    <input style="width:100%;background:#fff;border:1.5px solid #e8e8e4;border-radius:12px;padding:14px 15px;color:#1a1a1a;font-size:15px;outline:none;" type="text" placeholder="닉네임을 입력하세요" id="ninp" oninput="chkN()" maxlength="12">
+    <div style="color:#bbb;font-size:11px;margin-top:8px;" id="nhint">2~12자 사용 가능</div>
+  </div>
+  <div style="padding:14px 22px 36px;flex-shrink:0;"><button class="bp" id="btn-n" onclick="gTo('s-done')" disabled>생성!</button></div>
+</div>
+
+<div class="scr" id="s-done">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;">
+    <div style="font-size:56px;margin-bottom:12px;" id="di">✨</div>
+    <div style="color:#1a1a1a;font-size:19px;font-weight:700;margin-bottom:5px;" id="dn">환영합니다!</div>
+    <div style="font-size:11px;color:var(--a);font-weight:600;margin-bottom:12px;" id="ds"></div>
+    <div style="display:inline-flex;align-items:center;background:var(--al);border:1px solid var(--ab);border-radius:20px;padding:5px 16px;margin-bottom:14px;"><span style="color:var(--a);font-size:11px;font-weight:600;" id="db">🌱 씨앗 · 새벽형 인간</span></div>
+    <div style="width:100%;display:flex;flex-direction:column;gap:8px;margin-bottom:14px;text-align:left;">
+      <div style="background:#eef5ee;border:1px solid #b0d4b8;border-radius:11px;padding:10px 14px;font-size:11px;color:#3a7a5a;font-weight:500;line-height:1.9;">🔄 <b>습관</b> — 직업별 루틴 · 인증 시 XP + 크루 피드 자동 등록</div>
+      <div style="background:#fdf8f0;border:1px solid #e0d0a8;border-radius:11px;padding:10px 14px;font-size:11px;color:#a07020;font-weight:500;line-height:1.9;">✅ <b>투두</b> — 내가 직접 추가 · 크루원 인증 → +10 XP 지급</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;width:100%;" id="dstats"></div>
+  </div>
+  <div style="padding:0 22px 36px;flex-shrink:0;"><button class="bp" style="font-size:14px;padding:16px;border-radius:14px;" onclick="gTo('s-tutorial')">살자! →</button></div>
+</div>
+
+<div class="scr" id="s-tutorial">
+  <div style="flex:1;display:flex;flex-direction:column;overflow-y:auto;">
+    <div style="background:var(--a);padding:28px 24px 20px;flex-shrink:0;">
+      <div style="color:rgba(255,255,255,.7);font-size:11px;margin-bottom:6px;">시작 가이드</div>
+      <div style="color:#fff;font-size:20px;font-weight:800;margin-bottom:4px;">살자, 이렇게 하면 돼요!</div>
+      <div style="color:rgba(255,255,255,.7);font-size:12px;">딱 3가지만 알면 바로 시작 가능해요</div>
+    </div>
+    <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px;flex:1;">
+      <div style="background:#fff;border-radius:16px;padding:18px;border:1px solid #efefeb;display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:40px;height:40px;border-radius:12px;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔄</div>
+        <div><div style="color:#1a1a1a;font-size:14px;font-weight:700;margin-bottom:5px;">① 습관 탭에서 루틴 인증</div><div style="color:#999;font-size:11px;line-height:1.7;">매일 습관을 체크하고 인증해요.<br>사진+글 인증 시 XP 100%, 글만 70%, 완료만 40%!</div></div>
+      </div>
+      <div style="background:#fff;border-radius:16px;padding:18px;border:1px solid #efefeb;display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:40px;height:40px;border-radius:12px;background:#eef5ee;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🤝</div>
+        <div><div style="color:#1a1a1a;font-size:14px;font-weight:700;margin-bottom:5px;">② 크루탭에서 서로 인증</div><div style="color:#999;font-size:11px;line-height:1.7;">크루원의 피드에 👍 인증하면 서로 XP 획득!<br>투두는 크루원 인증이 있어야 XP 지급돼요.</div></div>
+      </div>
+      <div style="background:#fff;border-radius:16px;padding:18px;border:1px solid #efefeb;display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:40px;height:40px;border-radius:12px;background:#fdf8f0;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">⬆️</div>
+        <div><div style="color:#1a1a1a;font-size:14px;font-weight:700;margin-bottom:5px;">③ XP 모아서 레벨업 & 전직</div><div style="color:#999;font-size:11px;line-height:1.7;">Lv.5, 10, 20에서 더 강한 직업으로 전직!<br>Lv.50 달성 시 전설의 ✦ 초월자가 돼요.</div></div>
+      </div>
+      <div style="background:var(--a);border-radius:16px;padding:16px 18px;">
+        <div style="color:rgba(255,255,255,.7);font-size:9px;letter-spacing:1.5px;margin-bottom:6px;">💡 꿀팁</div>
+        <div style="color:#fff;font-size:12px;line-height:1.7;">매일 인증하면 콤보가 쌓여요!<br>콤보가 높을수록 XP 배율이 올라가요 (최대 x2.0)</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:0 22px 36px;flex-shrink:0;">
+    <button class="bp" onclick="startGame()" style="font-size:15px;padding:17px;border-radius:16px;">바로 시작하기 🚀</button>
+  </div>
+</div>
+
+<div class="scr" id="s-home">
+  <div class="tbar">
+    <div style="display:flex;align-items:center;gap:7px;">
+      <svg width="20" height="20" viewBox="0 0 1024 1024" fill="none"><circle cx="512" cy="512" r="300" stroke="var(--a)" stroke-width="36"/><path d="M300 512H420L470 450L520 580L570 480H720" stroke="var(--a)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/><circle cx="720" cy="512" r="16" fill="var(--a)"/></svg>
+      <span style="color:#1a1a1a;font-size:14px;font-weight:800;letter-spacing:2px;">살자</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="display:flex;align-items:center;gap:8px;"><div style="font-size:10px;color:#999;" id="tlv">Lv.1 · 0/1,000 XP</div>
+      <button onclick="toggleDark()" id="dark-btn" style="background:transparent;border:none;font-size:15px;cursor:pointer;padding:1px 3px;">🌙</button>
+      <button onclick="showAttendance()" id="att-btn" style="background:var(--a);color:#fff;border:none;border-radius:20px;padding:3px 10px;font-size:9px;font-weight:700;cursor:pointer;">🎁 출석</button>
+    </div>
+    </div>
+  </div>
+  <div style="background:#fff;padding:15px 18px 13px;flex-shrink:0;border-bottom:1px solid #efefeb;">
+    <div style="display:flex;align-items:flex-start;gap:14px;">
+      <div style="width:62px;height:62px;border-radius:50%;background:var(--al);border:2px solid var(--ab);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:28px;position:relative;cursor:pointer;" onclick="chgP()">
+        <span id="hav">🌱</span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="color:#1a1a1a;font-size:15px;font-weight:700;margin-bottom:1px;" id="hnm">나</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+          <span style="color:#999;font-size:10px;" id="hcl">새벽형 인간</span>
+          <span class="gbadge" id="gbd">🌱 씨앗</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:9px;color:#bbb;">EXP</span><span style="font-size:9px;color:#bbb;" id="hep">0/1,000</span></div>
+        <div class="ebar"><div class="ef" id="heb" style="width:0%"></div></div>
+        <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
+          <div class="badge"><span>1일차</span></div>
+          <div class="badge bga" id="cbg" style="display:none;"><span id="cbgt">콤보!</span></div>
+          <div class="badge bgb" id="tbg" style="display:none;"><span id="tbgt">칭호</span></div>
+          <div class="badge" id="streak-badge" style="display:none;background:#fff3cd;border-color:#f0d060;"><span style="color:#a07020;">0일 연속 🔥</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:11px;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;" id="hmini"></div>
+  </div>
+
+  <div class="htab" id="htab" style="display:none;">
+    <button class="ht on" onclick="swHT('h',this)">🔄 습관</button>
+    <button class="ht" onclick="swHT('t',this)">✅ 투두리스트</button>
+  </div>
+
+  <div class="tb" id="ht-h" style="display:flex;flex-direction:column;">
+    <div class="hbody">
+      <div class="cbar">
+        <div style="font-size:22px;flex-shrink:0;" id="cfl">💤</div>
+        <div style="flex:1;"><div style="font-size:16px;font-weight:800;color:#1a1a1a;"><span id="cnum">0</span>콤보</div><div style="font-size:9px;color:#bbb;margin-top:2px;">인증할수록 XP 배율이 올라가요!</div></div>
+        <div class="cmult" id="cml">x1.0</div>
+      </div>
+      <div class="wcard">
+        <div class="wi"><span class="wv" id="wdn">0</span><span class="wl">인증 완료</span></div>
+        <div class="wi"><span class="wv" id="wxp">0</span><span class="wl">획득 XP</span></div>
+        <div class="wi"><span class="wv" id="wrt">0%</span><span class="wl">달성률</span></div>
+        <div class="wi"><span class="wv" id="wgd">🌱</span><span class="wl">등급</span></div>
+      </div>
+      <div>
+        <div class="slbl"><span>오늘의 습관</span><span id="hcnt" style="color:#bbb;font-size:10px;font-weight:400;"></span><button onclick="toggleCustomHabitForm()" style="background:var(--al);border:1px solid var(--ab);color:var(--a);border-radius:7px;padding:3px 9px;font-size:9px;font-weight:600;cursor:pointer;">+ 추가</button></div>
+        <div id="custom-habit-form" style="display:none;background:#fff;border-radius:13px;padding:14px;margin-bottom:10px;border:1.5px solid var(--a);">
+          <div style="font-size:11px;font-weight:700;color:var(--a);margin-bottom:10px;">✏️ 나만의 습관 추가</div>
+          <input type="text" id="custom-habit-title" placeholder="습관 이름 (예: 물 2L 마시기)" maxlength="20" style="width:100%;background:#f9f9f7;border:1px solid #e8e8e4;border-radius:8px;padding:9px 11px;color:#1a1a1a;font-size:12px;outline:none;margin-bottom:8px;">
+          <div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;scrollbar-width:none;">
+            <button onclick="selHabitCat(this,'운동')" class="hcat-btn" style="flex-shrink:0;background:var(--a);color:#fff;border:none;border-radius:18px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;">🏃 운동</button>
+            <button onclick="selHabitCat(this,'독서')" class="hcat-btn" style="flex-shrink:0;background:#fff;color:#666;border:1px solid #e0e0dc;border-radius:18px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;">📖 독서</button>
+            <button onclick="selHabitCat(this,'명상')" class="hcat-btn" style="flex-shrink:0;background:#fff;color:#666;border:1px solid #e0e0dc;border-radius:18px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;">🧘 명상</button>
+            <button onclick="selHabitCat(this,'기상')" class="hcat-btn" style="flex-shrink:0;background:#fff;color:#666;border:1px solid #e0e0dc;border-radius:18px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;">⏰ 기상</button>
+            <button onclick="selHabitCat(this,'기타')" class="hcat-btn" style="flex-shrink:0;background:#fff;color:#666;border:1px solid #e0e0dc;border-radius:18px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;">📌 기타</button>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <select id="custom-habit-xp" style="flex:1;background:#f9f9f7;border:1px solid #e8e8e4;border-radius:8px;padding:8px;color:#1a1a1a;font-size:11px;outline:none;">
+              <option value="60">쉬움 (60 XP)</option>
+              <option value="80" selected>보통 (80 XP)</option>
+              <option value="100">어려움 (100 XP)</option>
+              <option value="150">매우 어려움 (150 XP)</option>
+            </select>
+            <button class="bsm" onclick="addCustomHabit()">추가</button>
+            <button onclick="toggleCustomHabitForm()" style="background:#f4f4f2;color:#666;border:none;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;">취소</button>
+          </div>
+        </div>
+        <div style="background:var(--al);border:1px solid var(--ab);border-radius:9px;padding:7px 12px;margin-bottom:10px;font-size:10px;color:var(--a);font-weight:500;" id="hsl">🔄 인증 완료 시 XP 지급 + 크루 피드 자동 등록</div>
+        <div id="hlist"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tb" id="ht-t" style="display:none;">
+    <div class="sec">
+      <div class="slbl"><span>투두리스트</span><button class="bsm" onclick="shAT()">+ 추가</button></div>
+      <div id="taf" style="display:none;" class="tform">
+        <div style="font-size:11px;color:#a07020;margin-bottom:8px;font-weight:500;">✅ 완료 후 크루원 인증 받아야 +10 XP 지급</div>
+        <input type="text" id="tti" placeholder="오늘 할 일을 입력하세요"/>
+        <div style="display:flex;gap:7px;align-items:center;">
+          <select id="tca" style="flex:1;background:#f9f9f7;border:1px solid #e8e8e4;border-radius:8px;padding:7px;color:#1a1a1a;font-size:11px;outline:none;">
+            <option value="업무">💼 업무</option><option value="공부">📖 공부</option><option value="운동">🏃 운동</option><option value="생활">🏠 생활</option><option value="기타">📌 기타</option>
+          </select>
+          <button class="bsm" onclick="addT()">추가</button>
+          <button onclick="shAT()" style="background:#f4f4f2;color:#666;border:none;border-radius:8px;padding:7px 10px;font-size:11px;cursor:pointer;">취소</button>
+        </div>
+      </div>
+      <div style="background:#fdf8f0;border:1px solid #e0d0a8;border-radius:9px;padding:7px 12px;margin-bottom:10px;font-size:10px;color:#a07020;font-weight:500;">✅ 완료 → 기록 → 크루 피드 → 크루원 인증 → +10 XP!</div>
+      <div id="tlist"></div>
+    </div>
+  </div>
+
+  <div class="ctb" id="tab-crew" style="display:none;">
+    <div class="citbar">
+      <button class="itb on" onclick="swCT('feed',this)">피드</button>
+      <button class="itb" onclick="swCT('members',this)">멤버</button>
+    </div>
+    <div class="cpanel on" id="cr-feed">
+      <!-- 크루 타입별 상단 -->
+      <div id="crew-type-banner" style="margin:9px 16px 0;"></div>
+      <div style="margin:6px 16px;background:var(--al);border:1px solid var(--ab);border-radius:11px;padding:9px 13px;font-size:10px;color:var(--a);font-weight:500;">인증 완료 시 자동 피드 등록 · 투두는 크루원 인증 받아야 XP 지급</div>
+      <!-- 크루 챌린지 -->
+      <div style="margin:0 16px 8px;background:#fff;border:1.5px solid #efefeb;border-radius:14px;overflow:hidden;" id="crew-challenge">
+        <div style="background:#1a1a1a;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="color:#fff;font-size:11px;font-weight:700;">⚡ 이번 주 크루 챌린지</div>
+          <div style="font-size:9px;color:#888;background:#333;border-radius:20px;padding:2px 8px;" id="ch-remain">3일 남음</div>
+        </div>
+        <div style="padding:12px 14px;">
+          <div style="color:#1a1a1a;font-size:12px;font-weight:600;margin-bottom:6px;" id="ch-title">크루 전원 기상 인증 5회 달성!</div>
+          <div style="height:6px;background:#efefeb;border-radius:3px;overflow:hidden;margin-bottom:6px;">
+            <div style="height:100%;background:var(--a);border-radius:3px;transition:width .5s;" id="ch-bar" style="width:40%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;"><span style="font-size:9px;color:#bbb;" id="ch-prog">2/5 달성</span><span style="font-size:9px;color:var(--a);font-weight:600;">보상: +200 XP</span></div>
+        </div>
+      </div>
+      <div id="flist"></div><div style="height:12px;"></div>
+    </div>
+    <div class="cpanel" id="cr-members">
+      <div class="sec">
+  <div class="slbl">크루 랭킹 <span style="font-size:9px;color:#bbb;font-weight:400;">이번 주 달성률 기준</span></div>
+  <div id="mlist"></div>
+</div>
+
+    </div>
+  </div>
+
+  <div class="tb" id="tab-job" style="display:none;">
+    <div class="sec">
+      <div class="slbl">전직 선택</div>
+      <div style="background:var(--al);border:1px solid var(--ab);border-radius:12px;padding:11px 13px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--a);margin-bottom:5px;">🔀 성장 단계별 전직</div>
+        <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;" id="jstps"></div>
+      </div>
+      <div id="jtree"></div>
+    </div>
+  </div>
+
+  <!-- 전국 랭킹 탭 -->
+  <div class="tb" id="tab-rank" style="display:none;padding-bottom:18px;">
+    <div style="padding:14px 18px 0;">
+      <!-- 직업군 필터 -->
+      <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;padding-bottom:2px;">
+        <button onclick="filterRank('all',this)" style="flex-shrink:0;background:var(--a);color:#fff;border:none;border-radius:18px;padding:5px 14px;font-size:10px;font-weight:600;cursor:pointer;">전체</button>
+        <button onclick="filterRank('solo',this)" style="flex-shrink:0;background:#fff;color:#666;border:1px solid #e0e0dc;border-radius:18px;padding:5px 14px;font-size:10px;font-weight:600;cursor:pointer;">솔로</button>
+        <button onclick="filterRank('crew',this)" style="flex-shrink:0;background:#fff;color:#3a7a5a;border:1px solid #b0d4b8;border-radius:18px;padding:5px 14px;font-size:10px;font-weight:600;cursor:pointer;">크루</button>
+      </div>
+
+      <!-- 내 순위 카드 -->
+      <div style="background:var(--a);border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:22px;font-weight:800;color:#fff;width:36px;text-align:center;" id="my-rank-num">-</div>
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px;" id="my-rank-av">🌱</div>
+        <div style="flex:1;">
+          <div style="color:#fff;font-size:12px;font-weight:700;" id="my-rank-nick">나</div>
+          <div style="color:rgba(255,255,255,.7);font-size:10px;" id="my-rank-job">새벽형 인간</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="color:#fff;font-size:14px;font-weight:800;" id="my-rank-xp">0 XP</div>
+          <div style="color:rgba(255,255,255,.6);font-size:9px;">상위 <span id="my-rank-pct">-</span>%</div>
+        </div>
+      </div>
+
+      <!-- 전국 랭킹 리스트 -->
+      <div style="font-size:10px;font-weight:700;color:#bbb;letter-spacing:1.5px;margin-bottom:10px;">전국 갓생 랭킹</div>
+      <div id="rank-list"></div>
+    </div>
+  </div>
+
+  <div class="tb" id="tab-more" style="display:none;">
+<div class="sec">
+      <div class="slbl">🔔 알림 설정</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#fff;border-radius:12px;border:1px solid #efefeb;"><div><div style="font-size:12px;font-weight:600;color:#1a1a1a;">습관 미완료 알림</div><div style="font-size:10px;color:#999;margin-top:2px;">저녁 9시 잔소리 알림</div></div><div id="notif-habit" onclick="toggleNotif(this)" style="width:44px;height:24px;background:var(--a);border-radius:12px;cursor:pointer;position:relative;"><div style="position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:#fff;"></div></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#fff;border-radius:12px;border:1px solid #efefeb;"><div><div style="font-size:12px;font-weight:600;color:#1a1a1a;">크루원 인증 알림</div><div style="font-size:10px;color:#999;margin-top:2px;">크루원이 내 피드 인증 시</div></div><div id="notif-crew" onclick="toggleNotif(this)" style="width:44px;height:24px;background:var(--a);border-radius:12px;cursor:pointer;position:relative;"><div style="position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:#fff;"></div></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#fff;border-radius:12px;border:1px solid #efefeb;"><div><div style="font-size:12px;font-weight:600;color:#1a1a1a;">연속 갓생 위기 알림</div><div style="font-size:10px;color:#999;margin-top:2px;">스트릭 끊길 것 같을 때</div></div><div id="notif-streak" onclick="toggleNotif(this)" style="width:44px;height:24px;background:var(--a);border-radius:12px;cursor:pointer;position:relative;"><div style="position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:#fff;"></div></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:#fff;border-radius:12px;border:1px solid #efefeb;"><div><div style="font-size:12px;font-weight:600;color:#1a1a1a;">주간 갓생 리포트</div><div style="font-size:10px;color:#999;margin-top:2px;">매주 월요일 지난 주 분석</div></div><div id="notif-weekly" onclick="toggleNotif(this)" style="width:44px;height:24px;background:#e8e8e4;border-radius:12px;cursor:pointer;position:relative;"><div style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;"></div></div></div>
+      </div>
+    </div>
+        <div class="sec">
+      <div style="text-align:center;margin-bottom:18px;">
+        <div style="font-size:52px;margin-bottom:8px;cursor:pointer;" id="ctav" onclick="chgP()">🌱</div>
+        <div style="color:#1a1a1a;font-size:16px;font-weight:700;" id="ctnm">나</div>
+        <div style="color:#999;font-size:11px;margin-top:2px;" id="ctcl">새벽형 인간</div>
+        <div style="margin-top:6px;" id="ctgw"></div>
+        <div id="cttd" style="display:none;margin-top:6px;"></div>
+        <div style="margin-top:13px;display:flex;justify-content:center;gap:18px;">
+          <div style="text-align:center;"><div style="color:#bbb;font-size:9px;margin-bottom:2px;">총 XP</div><div style="color:#1a1a1a;font-size:14px;font-weight:700;" id="ctxp">0</div></div>
+          <div style="text-align:center;"><div style="color:#bbb;font-size:9px;margin-bottom:2px;">습관 인증</div><div style="color:#1a1a1a;font-size:14px;font-weight:700;" id="ctce">0</div></div>
+          <div style="text-align:center;"><div style="color:#bbb;font-size:9px;margin-bottom:2px;">투두 완료</div><div style="color:#3a7a5a;font-size:14px;font-weight:700;" id="ctto">0</div></div>
+          <div style="text-align:center;"><div style="color:#bbb;font-size:9px;margin-bottom:2px;">칭호 수집</div><div style="color:#a07020;font-size:14px;font-weight:700;" id="cttt">0</div></div>
+        </div>
+        <div style="margin-top:10px;display:flex;justify-content:center;gap:18px;">
+          <div style="text-align:center;"><div style="color:#bbb;font-size:9px;margin-bottom:2px;">연속 갓생</div><div style="color:#f59e0b;font-size:14px;font-weight:700;" id="ctstr">0일 🔥</div></div>
+          <div style="text-align:center;"><div style="color:#bbb;font-size:9px;margin-bottom:2px;">갓생 레이팅</div><div style="color:var(--a);font-size:14px;font-weight:700;" id="ctrat">0</div></div>
+        </div>
+      </div>
+      
+
+      <!-- 이번 달 목표 -->
+      <div style="background:#fff;border:1px solid #efefeb;border-radius:12px;padding:12px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:11px;font-weight:700;color:#1a1a1a;">🎯 이번 달 목표</span>
+          <button onclick="sOv('ov-goal-set')" style="background:var(--al);border:1px solid var(--ab);color:var(--a);border-radius:7px;padding:3px 9px;font-size:9px;font-weight:600;cursor:pointer;">변경</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+          <span style="font-size:10px;color:#999;" id="goal-label">목표: 500 XP</span>
+          <span style="font-size:10px;font-weight:700;color:var(--a);" id="goal-pct">0%</span>
+        </div>
+        <div style="height:7px;background:#efefeb;border-radius:4px;overflow:hidden;">
+          <div id="goal-bar" style="height:100%;background:var(--ex);border-radius:4px;width:0%;transition:width .6s;"></div>
+        </div>
+        <div style="font-size:9px;color:#bbb;margin-top:5px;" id="goal-status">0 / 500 XP 달성</div>
+      </div>
+
+      <!-- 시즌 -->
+      <div onclick="sOv('ov-season');rSeason();" style="background:#1a1a1a;border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;">🏅</div>
+        <div style="flex:1;">
+          <div style="color:#fff;font-size:11px;font-weight:700;margin-bottom:2px;" id="season-label">시즌 1 진행 중</div>
+          <div style="color:#888;font-size:9px;" id="season-xp-label">시즌 XP: 0</div>
+        </div>
+        <div style="color:#666;font-size:18px;">→</div>
+      </div>
+
+      <!-- 갤러리 -->
+      <div onclick="openGallery()" style="background:#fff;border:1px solid #efefeb;border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;">📸</div>
+        <div style="flex:1;">
+          <div style="color:#1a1a1a;font-size:11px;font-weight:700;margin-bottom:2px;">나의 인증 갤러리</div>
+          <div style="color:#bbb;font-size:9px;" id="gallery-cnt">사진 인증 0장</div>
+        </div>
+        <div style="color:#bbb;font-size:18px;">→</div>
+      </div>
+    </div>
+    <div class="sec" style="background:#fff;">
+  <!-- 크루 상태 -->
+  <div id="my-crew-card" style="background:#fff;border:1.5px solid #efefeb;border-radius:14px;padding:14px 16px;margin-bottom:10px;">
+    <div style="font-size:10px;font-weight:700;color:#bbb;letter-spacing:1.5px;margin-bottom:10px;">나의 크루</div>
+    <div id="my-crew-content"></div>
+  </div>
+  <div style="background:var(--al);border:1.5px solid var(--ab);border-radius:14px;padding:14px 16px;margin-bottom:0;">
+    <div style="font-size:12px;font-weight:700;color:var(--a);margin-bottom:4px;">👥 친구 초대하기</div>
+    <div style="font-size:11px;color:#888;line-height:1.6;margin-bottom:10px;">친구를 초대하면 자동으로 크루가 생성돼요.<br>같이 살자!</div>
+    <button onclick="inviteFriend()" style="width:100%;background:var(--a);color:#fff;border:none;border-radius:10px;padding:11px;font-size:12px;font-weight:600;cursor:pointer;">초대 링크 복사하기 🔗</button>
+  </div>
+</div>
+<div class="sec">
+      <div class="slbl">🎖 나의 뱃지</div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px;scrollbar-width:none;">
+        <div id="badge-photo" style="text-align:center;flex-shrink:0;opacity:.3;">
+          <div style="width:52px;height:52px;background:#f4f4f2;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 4px;border:2px solid #e8e8e4;">📸</div>
+          <div style="font-size:8px;color:#bbb;font-weight:600;">포토러</div>
+        </div>
+        <div id="badge-streak7" style="text-align:center;flex-shrink:0;opacity:.3;">
+          <div style="width:52px;height:52px;background:#fff3cd;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 4px;border:2px solid #f0d060;">🔥</div>
+          <div style="font-size:8px;color:#a07020;font-weight:600;">7일연속</div>
+        </div>
+        <div id="badge-combo10" style="text-align:center;flex-shrink:0;opacity:.3;">
+          <div style="width:52px;height:52px;background:#f0f5ff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 4px;border:2px solid #c4b5fd;">⚡</div>
+          <div style="font-size:8px;color:#6d28d9;font-weight:600;">10콤보</div>
+        </div>
+        <div id="badge-crew20" style="text-align:center;flex-shrink:0;opacity:.3;">
+          <div style="width:52px;height:52px;background:#eef5ee;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 4px;border:2px solid #b0d4b8;">🤝</div>
+          <div style="font-size:8px;color:#3a7a5a;font-weight:600;">크루인증20</div>
+        </div>
+        <div id="badge-transcend" style="text-align:center;flex-shrink:0;opacity:.3;">
+          <div style="width:52px;height:52px;background:#1a1a1a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 4px;border:2px solid #555;">✦</div>
+          <div style="font-size:8px;color:#888;font-weight:600;">초월자</div>
+        </div>
+      </div>
+      <div class="slbl" style="margin-top:10px;">🏆 칭호 컬렉션 <span id="ttlcn" style="color:#999;font-size:10px;font-weight:400;"></span></div>
+      <div style="display:flex;gap:5px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none;">
+        <button onclick="fltT('all',this)" style="flex-shrink:0;background:var(--a);color:#fff;border:none;border-radius:18px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;">전체</button>
+        <button onclick="fltT('S',this)" style="flex-shrink:0;background:#fff;color:#b05040;border:1px solid #e8d0cc;border-radius:18px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;">S급</button>
+        <button onclick="fltT('A',this)" style="flex-shrink:0;background:#fff;color:#a07020;border:1px solid #e0d0a8;border-radius:18px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;">A급</button>
+        <button onclick="fltT('B',this)" style="flex-shrink:0;background:#fff;color:#3a7a5a;border:1px solid #b0d4b8;border-radius:18px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;">B급</button>
+        <button onclick="fltT('C',this)" style="flex-shrink:0;background:#fff;color:#666;border:1px solid #e0e0dc;border-radius:18px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;">C급</button>
+        <button onclick="fltT('u',this)" style="flex-shrink:0;background:#fff;color:#3a7a5a;border:1px solid #b0d4b8;border-radius:18px;padding:4px 12px;font-size:10px;font-weight:600;cursor:pointer;">획득</button>
+      </div>
+      <div id="ttll"></div>
+    </div>
+  </div>
+
+  <div class="bnav" id="bnav" style="display:none;">
+    <div class="ni on" onclick="swM('home',this)"><span class="nic">🏠</span>홈</div>
+    <div class="ni" onclick="swM('crew',this)"><span class="nic">🤝</span>크루</div>
+    <div class="ni" onclick="swM('rank',this)"><span class="nic">🏆</span>랭킹</div>
+    <div class="ni" onclick="swM('job',this)"><span class="nic">🔀</span>전직</div>
+    <div class="ni" onclick="swM('more',this)"><span class="nic">👤</span>더보기</div>
+  </div>
+</div>
+</div>
+
+<div class="ov" id="ov-ju" style="background:rgba(255,255,255,.98);overflow-y:auto;">
+  <div style="padding:28px 22px;width:100%;text-align:center;">
+    <div style="font-size:52px;margin-bottom:10px;" id="jui">⚙️</div>
+    <div style="color:var(--a);font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:4px;" id="jus">단련 단계!</div>
+    <div style="color:#1a1a1a;font-size:20px;font-weight:800;margin-bottom:4px;" id="jut">전직 해금!</div>
+    <div style="color:#999;font-size:12px;line-height:1.7;margin-bottom:20px;" id="jud">새로운 정체성으로 전직할 수 있어요!</div>
+    <div style="background:var(--al);border:1px solid var(--ab);border-radius:14px;padding:14px;margin-bottom:16px;text-align:left;">
+      <div style="font-size:11px;font-weight:700;color:var(--a);margin-bottom:10px;">🔀 전직하시겠어요?</div>
+      <div id="jujbs" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+    </div>
+    <button class="bp" onclick="hOv('ov-ju')">지금은 괜찮아요</button>
+  </div>
+</div>
+
+<div class="ov" id="ov-ttl" style="background:rgba(0,0,0,.7);align-items:center;justify-content:center;text-align:center;padding:28px;">
+  <div style="background:#fff;border-radius:22px;padding:28px 24px;width:100%;max-width:340px;">
+    <div style="font-size:9px;font-weight:700;color:var(--a);letter-spacing:2px;margin-bottom:8px;">🏆 칭호 획득!</div>
+    <div style="font-size:48px;margin-bottom:10px;" id="tui">⚡</div>
+    <div style="font-size:9px;font-weight:700;margin-bottom:3px;" id="tur"></div>
+    <div style="font-size:20px;font-weight:800;color:#1a1a1a;margin-bottom:6px;" id="tun">칭호</div>
+    <div style="font-size:12px;color:#999;line-height:1.7;margin-bottom:18px;" id="tud">설명</div>
+    <div style="display:flex;gap:7px;margin-bottom:12px;">
+      <button onclick="eqTtl()" style="flex:1;background:var(--a);color:#fff;border:none;border-radius:11px;padding:12px;font-size:12px;font-weight:700;cursor:pointer;">이 칭호 장착</button>
+      <button onclick="hOv('ov-ttl')" style="flex:1;background:#f4f4f2;color:#666;border:none;border-radius:11px;padding:12px;font-size:12px;font-weight:600;cursor:pointer;">나중에</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="ov-jd" style="background:rgba(249,249,247,.97);align-items:center;justify-content:center;text-align:center;padding:40px;">
+  <div style="font-size:56px;margin-bottom:12px;" id="jdi">⚡</div>
+  <div style="color:var(--a);font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:4px;">전직 완료</div>
+  <div style="color:#1a1a1a;font-size:20px;font-weight:800;margin-bottom:4px;" id="jdn">새벽 전사</div>
+  <div style="color:var(--am);font-size:11px;font-weight:600;margin-bottom:6px;" id="jds"></div>
+  <div style="color:#999;font-size:11px;margin-bottom:24px;">습관 퀘스트가 새 직업용으로 교체됐어요</div>
+  <button style="width:190px;background:var(--a);color:#fff;border:none;border-radius:12px;padding:13px;font-size:13px;font-weight:600;cursor:pointer;" onclick="hOv('ov-jd')">확인</button>
+</div>
+
+
+<!-- 출석 보상 팝업 -->
+<div class="ov" id="ov-attendance" style="background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:28px;">
+  <div style="background:#fff;border-radius:22px;padding:28px 24px;width:100%;max-width:340px;text-align:center;">
+    <div style="font-size:9px;font-weight:700;color:var(--a);letter-spacing:2px;margin-bottom:8px;">🎁 출석 보상</div>
+    <div style="font-size:48px;margin-bottom:8px;" id="att-icon">🎁</div>
+    <div style="font-size:18px;font-weight:800;color:#1a1a1a;margin-bottom:4px;" id="att-title">오늘도 왔군요!</div>
+    <div style="font-size:12px;color:#999;margin-bottom:16px;" id="att-desc">연속 1일째</div>
+    <!-- 7일 출석 현황 -->
+    <div style="display:flex;justify-content:center;gap:6px;margin-bottom:18px;" id="att-days"></div>
+    <div style="background:var(--al);border:1px solid var(--ab);border-radius:12px;padding:12px;margin-bottom:16px;">
+      <div style="font-size:11px;color:#999;margin-bottom:4px;">오늘의 출석 보상</div>
+      <div style="font-size:20px;font-weight:800;color:var(--a);" id="att-reward">+50 XP</div>
+    </div>
+    <button onclick="claimAttendance()" style="width:100%;background:var(--a);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;">받기!</button>
+  </div>
+</div>
+
+<!-- 시즌 정보 팝업 -->
+<div class="ov" id="ov-season" style="background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:28px;">
+  <div style="background:#1a1a1a;border-radius:22px;padding:28px 24px;width:100%;max-width:340px;text-align:center;">
+    <div style="font-size:9px;font-weight:700;color:#888;letter-spacing:2px;margin-bottom:8px;">🏅 시즌 정보</div>
+    <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:4px;" id="season-title">시즌 1</div>
+    <div style="font-size:11px;color:#888;margin-bottom:20px;" id="season-desc">이번 달 말일에 리셋돼요</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+      <div style="background:rgba(255,255,255,.07);border-radius:12px;padding:14px;">
+        <div style="font-size:20px;font-weight:800;color:#fff;" id="season-my-xp">0</div>
+        <div style="font-size:9px;color:#888;margin-top:2px;">내 시즌 XP</div>
+      </div>
+      <div style="background:rgba(255,255,255,.07);border-radius:12px;padding:14px;">
+        <div style="font-size:20px;font-weight:800;color:#fff;" id="season-my-rank">#-</div>
+        <div style="font-size:9px;color:#888;margin-top:2px;">시즌 순위</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#666;margin-bottom:16px;">시즌 종료 시 상위 랭커에게 전설 칭호 지급</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:10px 6px;">
+        <div style="font-size:18px;">👑</div>
+        <div style="font-size:9px;color:#f0c040;font-weight:700;margin-top:3px;">1위</div>
+        <div style="font-size:8px;color:#888;">전설의 초월자</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:10px 6px;">
+        <div style="font-size:18px;">🥈</div>
+        <div style="font-size:9px;color:#aaa;font-weight:700;margin-top:3px;">2~10위</div>
+        <div style="font-size:8px;color:#888;">갓생의 전설</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:10px 6px;">
+        <div style="font-size:18px;">🥉</div>
+        <div style="font-size:9px;color:#cd7f32;font-weight:700;margin-top:3px;">11~50위</div>
+        <div style="font-size:8px;color:#888;">살자왕</div>
+      </div>
+    </div>
+    <button onclick="hOv('ov-season')" style="width:100%;background:rgba(255,255,255,.1);color:#fff;border:1px solid #333;border-radius:12px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;">닫기</button>
+  </div>
+</div>
+
+<!-- 목표 설정 팝업 -->
+<div class="ov" id="ov-goal-set" style="background:rgba(0,0,0,.6);align-items:flex-end;">
+  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:20px 20px 40px;">
+    <div style="width:36px;height:4px;background:#e8e8e4;border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">이번 달 목표 설정</div>
+    <div style="font-size:11px;color:#999;margin-bottom:18px;">달성하면 보너스 XP가 지급돼요!</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+      <div onclick="setGoalXp(300)" data-xp="300" class="goal-opt" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:12px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:13px;font-weight:600;color:#1a1a1a;">🌱 초보 갓생러</div><div style="font-size:10px;color:#999;">300 XP 달성</div></div>
+        <div style="font-size:11px;color:#3a7a5a;font-weight:700;">+100 보너스</div>
+      </div>
+      <div onclick="setGoalXp(500)" data-xp="500" class="goal-opt" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:12px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:13px;font-weight:600;color:#1a1a1a;">💪 도전 갓생러</div><div style="font-size:10px;color:#999;">500 XP 달성</div></div>
+        <div style="font-size:11px;color:#3a7a5a;font-weight:700;">+200 보너스</div>
+      </div>
+      <div onclick="setGoalXp(1000)" data-xp="1000" class="goal-opt" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:12px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:13px;font-weight:600;color:#1a1a1a;">🔥 하드코어 갓생러</div><div style="font-size:10px;color:#999;">1,000 XP 달성</div></div>
+        <div style="font-size:11px;color:#3a7a5a;font-weight:700;">+500 보너스</div>
+      </div>
+      <div onclick="setGoalXp(2000)" data-xp="2000" class="goal-opt" style="background:#fff;border:1.5px solid #e8e8e4;border-radius:12px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:13px;font-weight:600;color:#1a1a1a;">✦ 초월자급 갓생러</div><div style="font-size:10px;color:#999;">2,000 XP 달성</div></div>
+        <div style="font-size:11px;color:#3a7a5a;font-weight:700;">+1,000 보너스</div>
+      </div>
+    </div>
+    <button class="bp" onclick="hOv('ov-goal-set')">확인</button>
+  </div>
+</div>
+
+<!-- 크루장 DM 팝업 -->
+<div class="ov" id="ov-dm" style="background:rgba(0,0,0,.6);align-items:flex-end;">
+  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:20px 20px 40px;max-height:70%;overflow-y:auto;">
+    <div style="width:36px;height:4px;background:#e8e8e4;border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:14px;">💬 크루장 메시지</div>
+    <div id="dm-list" style="margin-bottom:14px;"></div>
+    <div style="display:flex;gap:8px;">
+      <input id="dm-inp" type="text" placeholder="응원 메시지 보내기..." style="flex:1;background:#f9f9f7;border:1px solid #e8e8e4;border-radius:9px;padding:10px 12px;font-size:12px;outline:none;">
+      <button class="bsm" onclick="sendDM()">전송</button>
+    </div>
+  </div>
+</div>
+
+<!-- 갤러리 팝업 -->
+<div class="ov" id="ov-gallery" style="background:rgba(0,0,0,.85);align-items:flex-end;">
+  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:20px 20px 40px;max-height:80%;overflow-y:auto;">
+    <div style="width:36px;height:4px;background:#e8e8e4;border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:14px;">📸 나의 인증 갤러리</div>
+    <div id="gallery-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;"></div>
+    <div id="gallery-empty" style="display:none;text-align:center;padding:30px;color:#bbb;font-size:12px;">사진 인증을 하면 여기에 모여요!</div>
+  </div>
+</div>
+
+<!-- 크루장 공지 팝업 -->
+<div class="ov" id="ov-notice" style="background:rgba(0,0,0,.6);align-items:flex-end;">
+  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:20px 20px 40px;">
+    <div style="width:36px;height:4px;background:#e8e8e4;border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:15px;font-weight:700;color:#1a1a1a;">📢 크루 공지</div>
+      <button onclick="hOv('ov-notice')" style="background:#f4f4f2;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;">닫기</button>
+    </div>
+    <div id="notice-list"></div>
+    <div style="margin-top:14px;border-top:1px solid #efefeb;padding-top:14px;">
+      <div style="font-size:10px;font-weight:700;color:#bbb;margin-bottom:8px;">공지 작성 (크루장 전용)</div>
+      <textarea id="notice-inp" placeholder="크루원에게 전할 메시지..." style="width:100%;background:#f9f9f7;border:1px solid #e8e8e4;border-radius:9px;padding:10px 12px;font-size:12px;outline:none;resize:none;height:70px;font-family:inherit;"></textarea>
+      <button class="bp" style="margin-top:8px;" onclick="postNotice()">공지 올리기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 공개 크루 찾기 팝업 -->
+<div class="ov" id="ov-crew-join" style="background:rgba(0,0,0,.6);align-items:flex-end;">
+  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:18px 20px 40px;max-height:80%;overflow-y:auto;">
+    <div style="width:36px;height:4px;background:#e8e8e4;border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="color:#1a1a1a;font-size:15px;font-weight:700;">크루 찾기</div>
+      <button onclick="hOv('ov-crew-join')" style="background:#f4f4f2;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;">닫기</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <div style="flex:1;background:#f9f9f7;border:1px solid #e8e8e4;border-radius:9px;padding:9px 12px;font-size:11px;color:#bbb;">크루 이름 검색...</div>
+    </div>
+    <div id="public-crew-list"></div>
+  </div>
+</div>
+
+<div class="mov" id="pm">
+  <div class="ms">
+    <div style="width:36px;height:4px;background:#e8e8e4;border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="color:#1a1a1a;font-size:15px;font-weight:700;margin-bottom:12px;">프로필 사진 변경</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:14px;" id="egrd"></div>
+    <button class="bp" onclick="hMod('pm')">완료</button>
+  </div>
+</div>
+</div>
+
+<script>
+var MIN=10,BXP=1000,XMU=1.8,TXP=10;
+var G={g:'n',job:'dawn_f',av:'🌱',nick:'',lv:1,exp:0,xm:BXP,certs:0,txp:0,wd:0,wx:0,combo:0,eqT:null,ttls:[],feed:[],td:0,streak:0,lastCert:null,badges:[],rating:0,crewType:'solo',crewName:'',loginStreak:0,lastLogin:null,seasonXp:0,monthGoalXp:500,goalXp:500,gallery:[],notices:[],season:1};
+
+var JOBS={
+  f:{
+    stages:[{lv:1,icon:'🌱',name:'씨앗'},{lv:5,icon:'🌿',name:'새싹'},{lv:10,icon:'🌸',name:'꽃'},{lv:20,icon:'🍊',name:'열매'},{lv:50,icon:'✦',name:'초월자'}],
+    tiers:[
+      {jobs:[
+        {key:'dawn_f',name:'새벽형 인간',icon:'🌅',sl:'남들이 자는 새벽이 나의 골든타임',st:'매일 아침 일어나는 것만으로도 이미 오늘을 이기고 있어. 작은 루틴이 쌓여 삶을 바꿔.',h:[{icon:'⏰',t:'새벽 6시 기상',c:'기상',x:80},{icon:'🧘',t:'명상 10분',c:'명상',x:60},{icon:'📓',t:'감사일기 쓰기',c:'기타',x:60},{icon:'🌙',t:'11시 전 취침',c:'수면',x:80},{icon:'📵',t:'스마트폰 1시간 줄이기',c:'기타',x:60}]},
+        {key:'exp_f',name:'지식 탐험가',icon:'📚',sl:'매일 1%씩 더 똑똑해지는 삶',st:'책 한 페이지, 강의 하나. 오늘의 배움이 내일의 나를 만들어. 호기심을 잃지 마.',h:[{icon:'📖',t:'책 30페이지',c:'독서',x:100},{icon:'📝',t:'배운 것 정리',c:'독서',x:80},{icon:'🎧',t:'강의 1개 수강',c:'독서',x:80},{icon:'⏰',t:'새벽 6시 기상',c:'기상',x:80},{icon:'🧘',t:'명상 10분',c:'명상',x:60}]},
+        {key:'body_f',name:'바디빌더',icon:'💪',sl:'몸이 강해야 삶도 강해져',st:'운동은 의지력 훈련이야. 매일 조금씩 몸을 움직이면 멘탈까지 단단해져.',h:[{icon:'🏃',t:'30분 러닝',c:'운동',x:120},{icon:'🏋️',t:'근력 운동 30분',c:'운동',x:100},{icon:'📏',t:'스트레칭 10분',c:'운동',x:50},{icon:'🥗',t:'영양 식단',c:'기타',x:80},{icon:'💤',t:'8시간 수면',c:'수면',x:100}]},
+        {key:'crea_f',name:'감성 창작자',icon:'🎨',sl:'내 일상이 나의 작품이야',st:'창작은 거창한 게 아니야. 오늘 본 것, 느낀 것을 표현하는 것부터 시작해.',h:[{icon:'🎨',t:'창작물 1개 완성',c:'기타',x:100},{icon:'📸',t:'콘텐츠 1개 제작',c:'기타',x:100},{icon:'📚',t:'트렌드 리서치 30분',c:'독서',x:60},{icon:'⏰',t:'새벽 6시 기상',c:'기상',x:80},{icon:'🌙',t:'11시 전 취침',c:'수면',x:80}]},
+      ]},
+      {jobs:[
+        {key:'mind_f',name:'마음챙김러',icon:'🧘',sl:'속도보다 방향이 중요해',st:'바쁜 일상 속 나를 잃지 않는 것. 명상과 감사일기로 내면의 중심을 잡아.',h:[{icon:'🧘',t:'명상 20분',c:'명상',x:80},{icon:'📓',t:'감사일기',c:'기타',x:60},{icon:'🌅',t:'새벽 기상+스트레칭',c:'기상',x:80},{icon:'🌙',t:'10시 30분 취침',c:'수면',x:80},{icon:'📵',t:'디지털 디톡스',c:'기타',x:60}]},
+        {key:'well_f',name:'웰니스 라이프',icon:'🌿',sl:'몸과 마음이 함께 건강한 삶',st:'요가, 채식, 자연과의 연결. 나를 아끼는 생활 방식이 최고의 갓생이야.',h:[{icon:'🧘',t:'요가 30분',c:'명상',x:100},{icon:'🍃',t:'채식 식단',c:'기타',x:80},{icon:'📖',t:'명상 서적 20p',c:'독서',x:70},{icon:'🌅',t:'일출 맞이 기상',c:'기상',x:90},{icon:'💨',t:'호흡 명상 20분',c:'명상',x:80}]},
+        {key:'ins_f',name:'인사이트 수집가',icon:'🔍',sl:'보이지 않는 패턴을 읽어',st:'데이터와 뉴스 속에서 기회를 발견하는 눈. 매일 배우고 정리하면 세상이 달리 보여.',h:[{icon:'📊',t:'데이터 분석 1시간',c:'독서',x:120},{icon:'📰',t:'뉴스 정리',c:'독서',x:80},{icon:'📝',t:'인사이트 리포트',c:'독서',x:100},{icon:'🧘',t:'명상 15분',c:'명상',x:60},{icon:'⏰',t:'새벽 6시 기상',c:'기상',x:80}]},
+        {key:'aest_f',name:'미적 감각러',icon:'✨',sl:'아름다움을 발견하는 눈',st:'디자인은 눈에 보이는 것만이 아니야. 일상에서 미를 발견하는 훈련이 감각을 키워.',h:[{icon:'✏️',t:'스케치 30분',c:'기타',x:100},{icon:'🎨',t:'컬러 팔레트 연구',c:'기타',x:70},{icon:'📐',t:'레이아웃 디자인',c:'기타',x:100},{icon:'💡',t:'레퍼런스 수집',c:'독서',x:60},{icon:'⏰',t:'새벽 6시 기상',c:'기상',x:80}]},
+      ]},
+      {jobs:[
+        {key:'nav_f',name:'삶의 항해사',icon:'🧭',sl:'내 인생의 선장은 나야',st:'큰 결정을 두려워하지 않는 사람. 매일의 선택이 쌓여 내가 원하는 삶으로 향해.',h:[{icon:'📋',t:'의사결정 3개 기록',c:'기타',x:100},{icon:'📖',t:'비즈니스 서적 20p',c:'독서',x:80},{icon:'📈',t:'지표 리뷰',c:'독서',x:80},{icon:'⏰',t:'새벽 5시 기상',c:'기상',x:100},{icon:'🧘',t:'명상 15분',c:'명상',x:60}]},
+        {key:'inv_f',name:'성장 투자자',icon:'🌱',sl:'오늘의 나에게 투자하는 사람',st:'시간과 에너지를 어디에 쓰느냐가 미래를 결정해. 나 자신이 최고의 투자처야.',h:[{icon:'📈',t:'포트폴리오 점검',c:'독서',x:100},{icon:'📰',t:'경제 뉴스 정리',c:'독서',x:80},{icon:'📝',t:'투자 일지',c:'독서',x:80},{icon:'📚',t:'경제 서적 20p',c:'독서',x:80},{icon:'🧘',t:'명상 10분',c:'명상',x:60}]},
+        {key:'iron_f',name:'강철 체력러',icon:'🔥',sl:'체력이 곧 경쟁력이야',st:'극한까지 밀어붙이는 훈련. 몸의 한계를 넘으면 정신의 한계도 넘을 수 있어.',h:[{icon:'🦾',t:'벤치프레스 5세트',c:'운동',x:150},{icon:'🏋️',t:'스쿼트 5세트',c:'운동',x:150},{icon:'🥩',t:'단백질 식단',c:'기타',x:80},{icon:'💤',t:'8시간 수면',c:'수면',x:100},{icon:'📏',t:'스트레칭',c:'운동',x:60}]},
+        {key:'deep_f',name:'깊이 사는 사람',icon:'🦉',sl:'빠르게보다 깊게 살아',st:'철학, 사유, 산책. 소음에서 벗어나 진짜 중요한 것을 찾아가는 삶을 살아.',h:[{icon:'🦉',t:'철학책 30p',c:'독서',x:100},{icon:'🧘',t:'명상 30분',c:'명상',x:100},{icon:'📓',t:'통찰 일기',c:'기타',x:80},{icon:'🌿',t:'자연 속 산책',c:'기타',x:60},{icon:'📵',t:'디지털 디톡스 2h',c:'기타',x:80}]},
+      ]},
+      {jobs:[
+        {key:'transcend',name:'초월자',icon:'✦',sl:'삶과 습관이 하나가 된 경지',st:'더 이상 의지가 필요 없다. 갓생이 곧 숨쉬기가 됐다. 살아있는 것 자체가 루틴이다.',special:true,h:[{icon:'🌅',t:'새벽 4시 기상',c:'기상',x:200},{icon:'🧘',t:'명상 1시간',c:'명상',x:200},{icon:'📖',t:'고전 철학 필사',c:'독서',x:200},{icon:'🌿',t:'자연 속 2시간 사색',c:'기타',x:200},{icon:'💫',t:'오늘의 깨달음 기록',c:'기타',x:200}]},
+      ]},
+    ]
+  },
+  m:{
+    stages:[{lv:1,icon:'🪨',name:'원석'},{lv:5,icon:'⚙️',name:'단련'},{lv:10,icon:'⚡',name:'각성'},{lv:20,icon:'🏔️',name:'정복'},{lv:50,icon:'✦',name:'초월자'}],
+    tiers:[
+      {jobs:[
+        {key:'dawn_m',name:'새벽 전사',icon:'🌅',sl:'남들이 자는 새벽, 나는 앞서간다',st:'새벽 기상은 하루를 내 것으로 만드는 첫 번째 전투. 알람을 이긴 순간 이미 이겼다.',h:[{icon:'⏰',t:'새벽 5시 기상',c:'기상',x:100},{icon:'🧘',t:'명상 10분',c:'명상',x:60},{icon:'📓',t:'오늘 목표 3가지',c:'기타',x:60},{icon:'🌙',t:'11시 전 취침',c:'수면',x:80},{icon:'🏃',t:'기상 후 10분 러닝',c:'운동',x:80}]},
+        {key:'hunt_m',name:'지식 사냥꾼',icon:'📖',sl:'배움은 멈추지 않는 무기다',st:'책 한 권이 삶을 바꾼다. 아는 것이 힘이고, 배우는 자가 결국 이긴다.',h:[{icon:'📖',t:'책 30페이지',c:'독서',x:100},{icon:'📝',t:'배운 것 정리',c:'독서',x:80},{icon:'🎧',t:'강의 1개 수강',c:'독서',x:80},{icon:'⏰',t:'새벽 6시 기상',c:'기상',x:80},{icon:'📊',t:'인사이트 1개 기록',c:'독서',x:60}]},
+        {key:'body_m',name:'몸 만드는 놈',icon:'💪',sl:'몸은 거짓말을 하지 않는다',st:'땀 흘린 만큼 결과가 나온다. 운동을 이기는 지름길은 없다. 그냥 하는 거다.',h:[{icon:'🏃',t:'30분 러닝',c:'운동',x:120},{icon:'🏋️',t:'근력 운동 30분',c:'운동',x:100},{icon:'📏',t:'스트레칭 10분',c:'운동',x:50},{icon:'🥩',t:'단백질 식단',c:'기타',x:80},{icon:'💤',t:'8시간 수면',c:'수면',x:100}]},
+        {key:'trac_m',name:'목표 추적자',icon:'🎯',sl:'목표가 있는 놈은 흔들리지 않는다',st:'명확한 목표 하나가 수백 가지 유혹을 이긴다. 매일 어제보다 0.1% 나아지면 된다.',h:[{icon:'📋',t:'오늘 목표 3가지 설정',c:'기타',x:80},{icon:'📊',t:'진행상황 체크',c:'기타',x:60},{icon:'📖',t:'자기계발서 20p',c:'독서',x:80},{icon:'⏰',t:'새벽 6시 기상',c:'기상',x:80},{icon:'🔥',t:'핵심 루틴 완수',c:'기타',x:100}]},
+      ]},
+      {jobs:[
+        {key:'extr_m',name:'극한 도전자',icon:'🏋️',sl:'편한 길엔 성장이 없다',st:'한계는 부수라고 있는 거다. 인터벌, 고강도, 반복. 고통 뒤에 강함이 있다.',h:[{icon:'🏅',t:'인터벌 트레이닝',c:'운동',x:150},{icon:'🏊',t:'수영 30분',c:'운동',x:120},{icon:'📊',t:'운동 일지 기록',c:'기타',x:50},{icon:'🥗',t:'영양 식단',c:'기타',x:80},{icon:'⏰',t:'새벽 5시 기상',c:'기상',x:100}]},
+        {key:'patt_m',name:'패턴 파괴자',icon:'🔬',sl:'남들이 못 보는 걸 본다',st:'데이터 뒤에 숨은 진실을 찾아내는 눈. 분석은 결국 더 나은 결정을 만든다.',h:[{icon:'📊',t:'데이터 분석 1시간',c:'독서',x:120},{icon:'📰',t:'뉴스 정리',c:'독서',x:80},{icon:'📝',t:'인사이트 리포트',c:'독서',x:100},{icon:'🧘',t:'명상 15분',c:'명상',x:60},{icon:'⏰',t:'새벽 6시 기상',c:'기상',x:80}]},
+        {key:'ment_m',name:'멘탈 강자',icon:'🧘',sl:'흔들리지 않는 자가 결국 이긴다',st:'강한 사람은 감정을 숨기는 게 아니라 다스린다. 명상은 내면 근력 운동이다.',h:[{icon:'🧘',t:'명상 20분',c:'명상',x:80},{icon:'📓',t:'감사일기',c:'기타',x:60},{icon:'🌅',t:'새벽 기상+스트레칭',c:'기상',x:80},{icon:'🌙',t:'10시 30분 취침',c:'수면',x:80},{icon:'📵',t:'집중력 디톡스',c:'기타',x:60}]},
+        {key:'exec_m',name:'실행력 머신',icon:'⚡',sl:'생각만 하는 놈과 하는 놈의 차이',st:'완벽한 계획보다 불완전한 실행이 낫다. 일단 시작하면 절반은 된 거다.',h:[{icon:'✅',t:'핵심 업무 완료',c:'기타',x:100},{icon:'📋',t:'내일 계획 작성',c:'기타',x:60},{icon:'📖',t:'비즈니스 서적 20p',c:'독서',x:80},{icon:'🔁',t:'루틴 점검',c:'기타',x:60},{icon:'⏰',t:'새벽 5시 기상',c:'기상',x:100}]},
+      ]},
+      {jobs:[
+        {key:'deci_m',name:'방향 결정자',icon:'🧭',sl:'내 인생의 키는 내가 잡는다',st:'결정을 두려워하지 않는다. 작은 선택들이 쌓여 내가 원하는 방향으로 간다.',h:[{icon:'📋',t:'의사결정 3개 기록',c:'기타',x:100},{icon:'📖',t:'리더십 서적 20p',c:'독서',x:80},{icon:'📈',t:'지표 리뷰',c:'독서',x:80},{icon:'⏰',t:'새벽 5시 기상',c:'기상',x:100},{icon:'🧘',t:'명상 15분',c:'명상',x:60}]},
+        {key:'sinv_m',name:'자기 투자자',icon:'📈',sl:'가장 확실한 투자는 나 자신이다',st:'돈보다 먼저 시간과 에너지를 나에게 투자해라. 복리는 자기 자신에도 적용된다.',h:[{icon:'📈',t:'포트폴리오 점검',c:'독서',x:100},{icon:'📰',t:'경제 뉴스 정리',c:'독서',x:80},{icon:'📝',t:'투자 일지',c:'독서',x:80},{icon:'📚',t:'경제 서적 20p',c:'독서',x:80},{icon:'🧘',t:'명상 10분',c:'명상',x:60}]},
+        {key:'iron_m',name:'철인',icon:'🔥',sl:'육체의 한계를 넘으면 정신도 넘는다',st:'아프면 쉬어라, 하지만 게으르면 안 된다. 철인은 타고나지 않는다. 만들어진다.',h:[{icon:'🦾',t:'벤치프레스 5세트',c:'운동',x:150},{icon:'🏋️',t:'스쿼트 5세트',c:'운동',x:150},{icon:'🥩',t:'단백질 식단',c:'기타',x:80},{icon:'💤',t:'8시간 수면',c:'수면',x:100},{icon:'📏',t:'스트레칭',c:'운동',x:60}]},
+        {key:'mast_m',name:'고수',icon:'🦉',sl:'10년을 버티면 고수가 된다',st:'빠른 성공보다 깊은 내공. 매일 한 줌씩 쌓인 지혜가 어느 날 폭발한다.',h:[{icon:'🦉',t:'철학책 30p',c:'독서',x:100},{icon:'🧘',t:'명상 30분',c:'명상',x:100},{icon:'📓',t:'통찰 일기',c:'기타',x:80},{icon:'🌿',t:'자연 속 산책',c:'기타',x:60},{icon:'📵',t:'디지털 디톡스 2h',c:'기타',x:80}]},
+      ]},
+      {jobs:[
+        {key:'transcend',name:'초월자',icon:'✦',sl:'한계란 없다는 걸 증명해버렸다',st:'더 이상 의지가 필요 없다. 갓생이 곧 숨쉬기가 됐다. 살아있는 것 자체가 루틴이다.',special:true,h:[{icon:'🌅',t:'새벽 4시 기상',c:'기상',x:200},{icon:'🧘',t:'명상 1시간',c:'명상',x:200},{icon:'📖',t:'고전 철학 필사',c:'독서',x:200},{icon:'🌿',t:'자연 속 2시간 사색',c:'기타',x:200},{icon:'💫',t:'오늘의 깨달음 기록',c:'기타',x:200}]},
+      ]},
+    ]
+  }
+};
+
+var mAv=['🧔','🏃‍♂️','🧘‍♂️','📚','🏋️‍♂️','🧑‍💻','🎯','⚡'];
+var fAv=['👩','🏃‍♀️','🧘‍♀️','📖','💪','👩‍💻','🌸','✨'];
+var mEm=['🧔','🏋️','🧘‍♂️','📚','🧑‍💻','🎯','🌊','⚡','🦁','🔥','🚀','🪨','💪','⚽','🎮'];
+var fEm=['👩','🌸','🧘‍♀️','📖','👩‍💻','✨','🌺','🦋','💫','🌼','🎀','🌿','🍀','🌙','🎨'];
+var cM={'운동':{i:'🏃',c:'#558860'},'독서':{i:'📖',c:'#5566aa'},'명상':{i:'🧘',c:'#7766aa'},'기상':{i:'⏰',c:'#aa8833'},'수면':{i:'🌙',c:'#5588aa'},'기타':{i:'📌',c:'#888'}};
+
+var TTLS=[
+  {id:'s1',n:'갓생의 전설',i:'⚡',r:'S',d:'습관 인증 50개를 완료한 전설적 갓생러'},
+  {id:'s2',n:'살자왕',i:'👑',r:'S',d:'7일 연속 모든 루틴을 완벽히 인증'},
+  {id:'a1',n:'새벽을 깨운 자',i:'🌅',r:'A',d:'새벽 기상 인증 10번 완료'},
+  {id:'a2',n:'철의 의지',i:'💪',r:'A',d:'Lv.10 달성한 강인한 의지의 소유자'},
+  {id:'a3',n:'콤보 마스터',i:'⚡',r:'A',d:'인증 10콤보 이상 달성'},
+  {id:'a4',n:'투두 완전정복',i:'✅',r:'A',d:'투두 크루 인증 20번 달성'},
+  {id:'b1',n:'첫 발을 내딛다',i:'🌱',r:'B',d:'첫 습관 인증 완료'},
+  {id:'b2',n:'할 일 완료자',i:'☑️',r:'B',d:'투두 크루 인증 5번 달성'},
+  {id:'b3',n:'전직 탐험가',i:'🔀',r:'B',d:'처음으로 전직 성공'},
+  {id:'c1',n:'갓생 입문자',i:'🚪',r:'C',d:'살자 앱을 시작한 도전자'},
+  {id:'c2',n:'오늘만 사는 사람',i:'🎲',r:'C',d:'랜덤 칭호 드랍으로 획득'},
+  {id:'c3',n:'첫 인증!',i:'✓',r:'C',d:'첫 번째 인증 완료 기념'},
+  {id:'x1',n:'초월자',i:'✦',r:'S',d:'Lv.50을 달성하고 초월자가 된 전설'},
+  {id:'x2',n:'살자의 신',i:'👁',r:'S',d:'초월자로 습관 인증 100개 달성'},
+];
+var DROP=['c1','c2','c3','b1','b2','a1','a2','a3','a4','s1','s2'];
+var habits=[],todos=[],nid=100,curT=null,tFlt='all';
+
+function gd(){return JOBS[G.g]||JOBS.f;}
+function aJ(){var r=[];gd().tiers.forEach(function(t){t.jobs.forEach(function(j){r.push(j);});});return r;}
+function gJ(k){return aJ().find(function(j){return j.key===k;})||aJ()[0];}
+function gSt(lv){var s=gd().stages[0];gd().stages.forEach(function(x){if(lv>=x.lv)s=x;});return s;}
+function gXp(lv){return Math.round(BXP*Math.pow(XMU,lv-1));}
+function gTo(id){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});document.getElementById(id).classList.add('on');if(id==='s-done')bDone();}
+function sOv(id){document.getElementById(id).classList.add('on');}
+function hOv(id){document.getElementById(id).classList.remove('on');}
+function sMod(id){document.getElementById(id).classList.add('on');}
+function hMod(id){document.getElementById(id).classList.remove('on');}
+function toast(msg,d){var t=document.createElement('div');t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--a);color:#fff;border-radius:20px;padding:9px 18px;font-size:11px;font-weight:600;white-space:nowrap;z-index:999;';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.remove();},(d||2500));}
+function apT(g){var p=document.getElementById('phone');p.classList.remove('tm','tf');if(g==='m')p.classList.add('tm');else if(g==='f')p.classList.add('tf');}
+
+function selG(el,g){
+  ['gc-m','gc-f'].forEach(function(id){var e=document.getElementById(id);e.style.borderColor='#e8e8e4';e.style.background='#fff';});
+  el.style.borderColor='var(--a)';el.style.background='var(--al)';
+  G.g=g;apT(g);document.getElementById('btn-g').disabled=false;
+  bGbar();bCgrid();bAvRow();
+}
+
+function bGbar(){
+  document.getElementById('gbar').innerHTML=gd().stages.map(function(s,i){
+    var isT=s.name==='초월자';
+    return (i>0?'<div style="color:#ddd;font-size:10px;padding-bottom:12px;">→</div>':'')+
+    '<div style="text-align:center;flex:1;"><div style="font-size:'+(isT?'16':'18')+'px;margin-bottom:3px;">'+s.icon+'</div><div style="font-size:8px;font-weight:700;color:'+(isT?'#888':'#1a1a1a')+';">'+s.name+'</div><div style="font-size:7px;color:#bbb;">Lv.'+s.lv+'</div></div>';
+  }).join('');
+}
+
+function bCgrid(){
+  var t1=gd().tiers[0];
+  document.getElementById('csub').textContent=gd().stages[0].icon+' '+gd().stages[0].name+' 단계 시작 직업';
+  document.getElementById('cgrid').innerHTML=t1.jobs.map(function(j){
+    return '<div style="background:#fff;border:1.5px solid #e8e8e4;border-radius:14px;padding:14px 11px 12px;cursor:pointer;text-align:left;" id="cc-'+j.key+'" onclick="selC(this,\''+j.key+'\')">'+
+    '<div style="font-size:28px;margin-bottom:6px;">'+j.icon+'</div>'+
+    '<div style="color:#1a1a1a;font-size:12px;font-weight:800;margin-bottom:3px;">'+j.name+'</div>'+
+    '<div style="font-size:9px;color:var(--am);line-height:1.4;font-weight:600;">"'+j.sl+'"</div></div>';
+  }).join('');
+  document.getElementById('btn-c').disabled=true;
+  document.getElementById('sbox').style.display='none';
+}
+
+function selC(el,key){
+  document.querySelectorAll('[id^="cc-"]').forEach(function(c){c.style.borderColor='#e8e8e4';c.style.background='#fff';});
+  el.style.borderColor='var(--a)';el.style.background='var(--al)';
+  G.job=key;document.getElementById('btn-c').disabled=false;
+  var j=gJ(key);
+  document.getElementById('sbox').style.display='block';
+  document.getElementById('stxt').textContent=j.st;
+}
+
+function bAvRow(){
+  var list=G.g==='f'?fAv:mAv;G.av=list[0];
+  document.getElementById('nav').textContent=list[0];
+  document.getElementById('avrow').innerHTML=list.map(function(a,i){
+    return '<div style="width:52px;height:52px;border-radius:50%;background:'+(i===0?'var(--al)':'#fff')+';border:1.5px solid '+(i===0?'var(--a)':'#e8e8e4')+';display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;flex-shrink:0;" onclick="selAv(this,\''+a+'\')">'+a+'</div>';
+  }).join('');
+}
+function selAv(el,a){document.querySelectorAll('#avrow div').forEach(function(x){x.style.borderColor='#e8e8e4';x.style.background='#fff';});el.style.borderColor='var(--a)';el.style.background='var(--al)';G.av=a;document.getElementById('nav').textContent=a;}
+var G_GOAL='';
+var G_CREW_TYPE='solo';
+function selCrewType(el,type){
+  document.querySelectorAll('.crew-type-card').forEach(function(c){
+    c.style.borderColor='#e8e8e4';c.style.background='#fff';
+  });
+  el.style.borderColor='var(--a)';el.style.background='var(--al)';
+  G_CREW_TYPE=type;G.crewType=type;
+  document.getElementById('btn-crew-type').disabled=false;
+}
+function selGoal(el,goal){
+  document.querySelectorAll('.goal-card').forEach(function(c){c.style.borderColor='#e8e8e4';c.style.background='#fff';});
+  el.style.borderColor='var(--a)';el.style.background='var(--al)';
+  G_GOAL=goal;document.getElementById('btn-goal').disabled=false;
+}
+function chkN(){var v=document.getElementById('ninp').value.trim();document.getElementById('btn-n').disabled=v.length<2;document.getElementById('nhint').style.color=v.length>=2?'var(--a)':'#bbb';}
+
+function bDone(){
+  G.nick=document.getElementById('ninp').value.trim()||'갓생러';
+  var j=gJ(G.job),st=gd().stages[0];
+  document.getElementById('dn').textContent=G.nick+'님, 환영합니다!';
+  document.getElementById('di').textContent=st.icon;
+  document.getElementById('ds').textContent='"'+j.sl+'"';
+  document.getElementById('db').textContent=st.icon+' '+st.name+' · '+j.name;
+  habits=mkHabits(j);G.xm=gXp(1);
+  document.getElementById('dstats').innerHTML=j.h.map(function(q){var cm=cM[q.c]||cM['기타'];return '<div style="background:#fff;border-radius:9px;padding:7px 3px;text-align:center;border:1px solid #efefeb;"><span style="font-size:13px;display:block;margin-bottom:2px;">'+q.icon+'</span><span style="color:'+cm.c+';font-size:8px;display:block;font-weight:600;">'+q.c+'</span></div>';}).join('');
+  G.crewType=G_CREW_TYPE||'solo';
+}
+function mkHabits(j){return j.h.map(function(q,i){return{id:i+1,t:q.t,ic:q.icon,c:q.c,x:q.x,done:false,ct:null,cert:false,ph:false,txt:''};});}
+
+function startGame(){
+  if(!G.nick)G.nick='갓생러';
+  habits=mkHabits(gJ(G.job));
+  G.crewType=G_CREW_TYPE||'solo';
+  G.feed=[
+    {av:'🥇',nm:'지은',job:'마음챙김러',qn:'🧘 명상 20분',ct:'photo',txt:'오늘도 루틴 완료!',xp:80,isH:true,vMe:true,vs:3,react:{fire:2,strong:1,flower:0},myReact:null},
+    {av:'🌿',nm:'서연',job:'웰니스 라이프',qn:'✅ 보고서 제출',ct:'text',txt:'드디어 완료!',xp:TXP,isH:false,vMe:false,vs:0,cr:true,tid:-1},
+  ];
+  uChar();rMini();rHabits();rTodos();rJTree();rCrew();rFeed();
+  uMRep();rTtls();uCombo();uMore();uStreak();rMyCrewCard();rCrewBanner();uGoal();
+  // 자동 출석 체크
+  setTimeout(function(){showAttendance();},800);
+  var _bn=document.getElementById('bnav');if(_bn)_bn.style.display='flex';
+  var _ht=document.getElementById('htab');if(_ht)_ht.style.display='flex';
+  gTo('s-home');
+}
+
+function uChar(){
+  var j=gJ(G.job),st=gSt(G.lv);
+  ['hav','ctav'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=G.av;});
+  var ids={hnm:'nick',hcl:'job',ctnm:'nick',ctcl:'job',rni:'nick',rjb:'job'};
+  document.getElementById('hnm').textContent=G.nick;
+  document.getElementById('hcl').textContent=j.name;
+  var gbdEl=document.getElementById('gbd');
+  gbdEl.textContent=st.icon+' '+st.name;
+  if(st.name==='초월자'){gbdEl.style.background='#1a1a1a';gbdEl.style.color='#fff';gbdEl.style.borderColor='#555';}
+  else{gbdEl.style.background='var(--al)';gbdEl.style.color='var(--a)';gbdEl.style.borderColor='var(--ab)';}
+  document.getElementById('ctnm').textContent=G.nick;
+  document.getElementById('ctcl').textContent=j.name;
+  var _rni=document.getElementById('rni');if(_rni)_rni.textContent=G.nick;
+  var _rjb=document.getElementById('rjb');if(_rjb)_rjb.textContent=j.name;
+  document.getElementById('tlv').textContent='Lv.'+G.lv+' · '+G.exp.toLocaleString()+'/'+G.xm.toLocaleString()+' XP';
+  var sl=document.getElementById('hsl');if(sl)sl.textContent='"'+j.sl+'"';
+  var cg=document.getElementById('ctgw');if(cg)cg.innerHTML='<span style="display:inline-flex;align-items:center;background:var(--al);border:1px solid var(--ab);border-radius:18px;padding:3px 12px;font-size:10px;color:var(--a);font-weight:600;">'+st.icon+' '+st.name+' 단계</span>';
+  if(G.eqT){var t=TTLS.find(function(x){return x.id===G.eqT;});if(t){document.getElementById('tbg').style.display='inline-flex';document.getElementById('tbgt').textContent=t.i+' '+t.n;var d=document.getElementById('cttd');if(d){d.style.display='block';d.innerHTML='<span style="display:inline-flex;align-items:center;background:var(--al);border:1px solid var(--ab);border-radius:18px;padding:3px 12px;font-size:10px;color:var(--a);font-weight:600;">🏆 '+t.n+'</span>';}}}
+  else document.getElementById('tbg').style.display='none';
+  
+}
+
+function gMult(){if(G.combo===0)return 1;if(G.combo<=2)return 1.2;if(G.combo<=4)return 1.5;if(G.combo<=7)return 1.8;return 2.0;}
+function uCombo(){
+  var m=gMult();
+  var flM=['💤','🔥','🔥🔥','💥','💥💥','⚡💥','🌋','🌋','⚡'];
+  var flF=['💤','🌸','🌸🌸','💕','💕💕','✨💕','🌟','🌟','✨'];
+  document.getElementById('cnum').textContent=G.combo;
+  document.getElementById('cfl').textContent=(G.g==='f'?flF:flM)[Math.min(G.combo,8)];
+  var cm=document.getElementById('cml');cm.textContent='x'+m.toFixed(1);
+  cm.className=G.combo>=1?'cmult on':'cmult';
+  if(G.combo>0){document.getElementById('cbg').style.display='inline-flex';document.getElementById('cbgt').textContent=G.combo+'콤보!';}
+  else document.getElementById('cbg').style.display='none';
+}
+function rMini(){var cats=['운동','독서','명상','기상','수면'];var dm={},tm={};habits.forEach(function(q){tm[q.c]=(tm[q.c]||0)+1;if(q.cert)dm[q.c]=(dm[q.c]||0)+1;});document.getElementById('hmini').innerHTML=cats.map(function(c){var cm=cM[c]||cM['기타'];var d=dm[c]||0,tot=tm[c]||0,pct=tot>0?Math.round((d/tot)*100):0;return '<div style="text-align:center;"><div style="font-size:13px;margin-bottom:3px;">'+cm.i+'</div><div style="height:3px;background:#efefeb;border-radius:2px;overflow:hidden;margin-bottom:2px;"><div style="height:100%;width:'+pct+'%;background:var(--br);border-radius:2px;"></div></div><div style="font-size:7px;color:#bbb;">'+c+'</div></div>';}).join('');}
+
+function canSub(q){if(!q.ct)return false;if(q.ct==='none')return true;var ok=q.txt.trim().length>=MIN;if(q.ct==='text')return ok;return q.ph&&ok;}
+function getBtnC(q){if(!canSub(q))return '';return q.ct==='photo'?'rp':q.ct==='text'?'rt':'rn';}
+function getBtnL(q){
+  if(!q.ct)return '인증 방법을 먼저 선택하세요';
+  if(q.ct==='none')return '⚡ 완료 처리 (XP 40%)';
+  if(q.ct==='photo'){if(!q.ph)return '📷 사진 먼저 추가';if(q.txt.trim().length<MIN)return '✏️ '+MIN+'자 이상 필요';return '✓ 인증하고 XP 받기! (100%)';}
+  if(q.ct==='text'){if(q.txt.trim().length<MIN)return '✏️ '+MIN+'자 이상 필요';return '✓ 인증하고 XP 받기! (70%)';}
+  return '인증하기';
+}
+
+function rHabits(){
+  var cert=habits.filter(function(q){return q.cert;}).length;
+  document.getElementById('hcnt').textContent=cert+'/'+habits.length+' 인증완료';
+  var mult=gMult();
+  document.getElementById('hlist').innerHTML=habits.map(function(q){
+    var cm=cM[q.c]||cM['기타'],isOpen=q.done&&!q.cert;
+    var cb='';
+    if(q.cert){if(q.ct==='photo')cb='<span style="background:#eef5ee;border:1px solid #b0d4b8;border-radius:14px;padding:1px 7px;font-size:8px;color:#3a7a5a;font-weight:600;margin-left:4px;">📸✓</span>';
+    else if(q.ct==='text')cb='<span style="background:var(--al);border:1px solid var(--ab);border-radius:14px;padding:1px 7px;font-size:8px;color:var(--a);font-weight:600;margin-left:4px;">✍️✓</span>';
+    else cb='<span style="background:#f4f4f2;border:1px solid #e0e0dc;border-radius:14px;padding:1px 7px;font-size:8px;color:#888;font-weight:600;margin-left:4px;">⚡✓</span>';}
+    var h='<div class="qi'+(isOpen?' op':'')+(q.cert?' ce':'')+'">';
+    h+='<div class="qm" onclick="togH('+q.id+')">';
+    h+='<div class="qck'+(q.cert?' ok':q.done?' dn':'')+'">'+( q.done&&!q.cert?'✓':'')+'</div>';
+    h+='<div class="qb"><div class="qt">'+(q.ic||'')+' '+q.t+cb+'</div><div class="qs" style="color:'+cm.c+';">'+q.c+'</div></div>';
+    if(q.cert){var rx=Math.round(q.x*(q.ct==='photo'?1:q.ct==='text'?0.7:0.4));h+='<span class="xt ok">+'+rx+'XP✓</span>';}
+    else if(q.done)h+='<span class="xt pe">인증 후 XP↓</span>';
+    else h+=(G.combo>=2?'<span class="xt cm">x'+mult.toFixed(1)+' +'+Math.round(q.x*mult)+'</span>':'<span class="xt no">+'+q.x+'</span>');
+    h+='</div>';
+    if(isOpen){
+      h+='<div class="cpan on"><div style="background:#eef5ee;border:1px solid #b0d4b8;color:#3a7a5a;border-radius:9px;padding:9px 12px;margin-bottom:10px;font-size:10px;font-weight:600;line-height:1.6;">📝 '+MIN+'자 이상 작성하고 인증해요!</div>';
+      h+='<div style="font-size:9px;font-weight:600;color:#999;margin-bottom:9px;">인증 방법 선택</div>';
+      h+='<div class="ctabs"><div class="ct'+(q.ct==='photo'?' sp':'')+'" onclick="selCT('+q.id+',\'photo\')">'+'<span style="font-size:17px;display:block;margin-bottom:3px;">📸</span><span style="font-size:9px;font-weight:600;color:#666;display:block;">사진+글</span><span style="font-size:8px;font-weight:700;display:block;margin-top:1px;color:#3a7a5a;">XP 100%</span></div>';
+      h+='<div class="ct'+(q.ct==='text'?' st':'')+'" onclick="selCT('+q.id+',\'text\')">'+'<span style="font-size:17px;display:block;margin-bottom:3px;">✍️</span><span style="font-size:9px;font-weight:600;color:#666;display:block;">글만</span><span style="font-size:8px;font-weight:700;display:block;margin-top:1px;color:var(--a);">XP 70%</span></div>';
+      h+='<div class="ct'+(q.ct==='none'?' sn':'')+'" onclick="selCT('+q.id+',\'none\')">'+'<span style="font-size:17px;display:block;margin-bottom:3px;">⚡</span><span style="font-size:9px;font-weight:600;color:#666;display:block;">완료만</span><span style="font-size:8px;font-weight:700;display:block;margin-top:1px;color:#888;">XP 40%</span></div></div>';
+      if(q.ct==='photo'||q.ct==='text'){
+        if(q.ct==='photo')h+='<div class="pbox'+(q.ph?' up':'')+'" onclick="upP('+q.id+')">'+(q.ph?'<span style="font-size:26px;">'+(G.g==='f'?'🧘‍♀️':'🏋️')+'</span><span style="font-size:9px;color:#3a7a5a;font-weight:600;">✓ 사진 추가됨</span>':'<span style="font-size:20px;">📷</span><span style="font-size:10px;color:#bbb;">탭해서 사진 추가</span>')+'</div>';
+        var tok=q.txt.trim().length>=MIN;
+        h+='<textarea class="cta'+(tok?' ok':'')+'" id="hta-'+q.id+'" placeholder="오늘 어땠나요? ('+MIN+'자 이상 필수)" oninput="onTH('+q.id+',this)" maxlength="200">'+q.txt+'</textarea>';
+        h+='<div class="chint'+(tok?' ok':'')+'" id="hch-'+q.id+'">'+(tok?'✓ 작성 완료 ('+q.txt.length+'자)':q.txt.length+'/'+MIN+'자 이상 작성해야 인증 가능')+'</div>';
+      }
+      var bc=getBtnC(q),rdy=canSub(q);
+      h+='<button class="cbtn'+(bc?' '+bc:'')+'" onclick="subH('+q.id+')" '+(rdy?'':'disabled')+'>'+getBtnL(q)+'</button></div>';
+    }
+    h+='</div>';return h;
+  }).join('');
+}
+
+function togH(id){var q=habits.find(function(x){return x.id===id;});if(!q)return;if(q.cert){toast('✓ 이미 인증 완료된 습관이에요');return;}q.done=!q.done;if(!q.done){q.ct=null;q.txt='';q.ph=false;}uChar();rHabits();rMini();if(q.done)toast('완료! 아래에서 인증하면 XP를 받아요',1800);}
+function selCT(id,t){var q=habits.find(function(x){return x.id===id;});if(!q)return;q.ct=t;rHabits();if(t!=='none')setTimeout(function(){var ta=document.getElementById('hta-'+id);if(ta)ta.focus();},50);}
+function onTH(id,el){var q=habits.find(function(x){return x.id===id;});if(!q)return;q.txt=el.value;var ok=el.value.trim().length>=MIN;el.className='cta'+(ok?' ok':'');var h=document.getElementById('hch-'+id);if(h){h.className='chint'+(ok?' ok':'');h.textContent=ok?'✓ 작성 완료 ('+el.value.length+'자)':el.value.length+'/'+MIN+'자 이상 작성해야 인증 가능';}var btn=document.querySelector('[onclick="subH('+id+')"]');if(btn){var rdy=canSub(q);btn.className='cbtn'+(rdy?' '+getBtnC(q):'');btn.disabled=!rdy;btn.textContent=getBtnL(q);}}
+function upP(id){var q=habits.find(function(x){return x.id===id;});if(!q)return;q.ph=true;rHabits();setTimeout(function(){var ta=document.getElementById('hta-'+id);if(ta)ta.focus();},50);}
+
+function subH(id){
+  var q=habits.find(function(x){return x.id===id;});if(!q||!canSub(q))return;
+  var mult=gMult(),ratio=q.ct==='photo'?1.0:q.ct==='text'?0.7:0.4,roll=0.85+Math.random()*0.3;
+  var xp=Math.round(q.x*mult*ratio*roll);
+  q.cert=true;G.exp+=xp;G.txp+=xp;G.wx+=xp;G.wd++;G.certs++;G.seasonXp+=xp;
+  G.combo++;
+  var j=gJ(G.job);
+  G.feed.unshift({av:G.av,nm:G.nick,job:j.name,qn:(q.ic||'')+' '+q.t,ct:q.ct,txt:q.txt,xp:xp,isH:true,vMe:false,vs:0});
+  rFeed();
+  // 스트릭 업데이트
+  var today=new Date().toDateString();
+  if(G.lastCert!==today){G.streak++;G.lastCert=today;}
+  // 갓생 레이팅 누적
+  G.rating=Math.min(9999,G.rating+Math.round(xp*0.1));
+  toast('인증 완료! +'+xp+' XP! 크루 피드 등록됨'+(G.combo>=2?' '+G.combo+'콤보!':''),2500);
+  chkLv();uExp();uChar();rHabits();rMini();rCrew();uMRep();uCombo();uMore();uStreak();
+  setTimeout(function(){tryDrop();},600);
+  if(G.certs===1&&G.ttls.indexOf('c3')<0){G.ttls.push('c3');setTimeout(function(){trigTtl('c3');},1200);}
+  if(G.streak>=7&&G.ttls.indexOf('s2')<0){G.ttls.push('s2');setTimeout(function(){trigTtl('s2');},1500);}
+}
+
+function shAT(){var f=document.getElementById('taf');f.style.display=f.style.display==='none'?'block':'none';}
+function addT(){var t=document.getElementById('tti').value.trim();if(!t)return;var cat=document.getElementById('tca').value;var cm=cM[cat]||cM['기타'];todos.push({id:nid++,t:t,ic:cm.i,c:cat,done:false,cert:false,txt:'',vs:0,pend:false});document.getElementById('tti').value='';document.getElementById('taf').style.display='none';rTodos();toast('투두 추가됐어요! 완료 후 크루원 인증이 필요해요',2000);}
+
+function rTodos(){
+  if(todos.length===0){document.getElementById('tlist').innerHTML='<div style="color:#bbb;font-size:12px;text-align:center;padding:24px;line-height:1.9;">아직 할 일이 없어요<br>+ 추가 버튼으로 오늘 할 일을 등록해봐요!</div>';return;}
+  document.getElementById('tlist').innerHTML=todos.map(function(td){
+    var cm=cM[td.c]||cM['기타'],isOpen=td.done&&!td.cert&&!td.pend;
+    var h='<div class="qi'+(isOpen?' op':'')+(td.cert?' ce':'')+(td.pend?' tp':'')+'">';
+    h+='<div class="qm" onclick="togT('+td.id+')">';
+    h+='<div class="qck sq'+(td.cert?' ok':td.done?' dn':'')+'">'+( td.done&&!td.cert?'✓':'')+'</div>';
+    h+='<div class="qb"><div class="qt">'+(td.ic||'')+' '+td.t+(td.pend?'<span style="background:#fdf8f0;border:1px solid #e0d0a8;border-radius:14px;padding:1px 7px;font-size:8px;color:#a07020;font-weight:600;margin-left:4px;">크루 인증 대기</span>':'')+(td.cert?'<span style="background:#eef5ee;border:1px solid #b0d4b8;border-radius:14px;padding:1px 7px;font-size:8px;color:#3a7a5a;font-weight:600;margin-left:4px;">+'+TXP+'XP✓</span>':'')+'</div><div class="qs" style="color:'+cm.c+';">'+td.c+'</div></div>';
+    if(td.cert)h+='<span class="xt ok">+'+TXP+'XP✓</span>';
+    else if(td.pend)h+='<span class="xt cr">'+td.vs+'/1</span>';
+    else if(td.done)h+='<span class="xt pe">기록 작성↓</span>';
+    else h+='<span class="xt no">+'+TXP+'XP</span>';
+    h+='</div>';
+    if(isOpen){
+      h+='<div class="cpan on"><div style="background:#fdf8f0;border:1px solid #e0d0a8;color:#a07020;border-radius:9px;padding:9px 12px;margin-bottom:10px;font-size:10px;font-weight:600;line-height:1.6;">⭐ 크루원 1명 이상이 인증해줘야 +'+TXP+' XP가 지급돼요!</div>';
+      var tok=td.txt.trim().length>=MIN;
+      h+='<textarea class="cta'+(tok?' ok':'')+'" id="tta-'+td.id+'" placeholder="무엇을 완료했나요? ('+MIN+'자 이상)" oninput="onTT('+td.id+',this)" maxlength="200">'+td.txt+'</textarea>';
+      h+='<div class="chint'+(tok?' ok':'')+'" id="tch-'+td.id+'">'+(tok?'✓ 작성 완료':td.txt.length+'/'+MIN+'자')+'</div>';
+      h+='<button class="cbtn'+(tok?' rt':'')+'" onclick="subT('+td.id+')" '+(tok?'':'disabled')+'>'+(tok?'크루 피드에 올리기':'✏️ '+MIN+'자 이상 작성')+'</button></div>';
+    }
+    h+='</div>';return h;
+  }).join('');
+}
+
+function togT(id){var td=todos.find(function(x){return x.id===id;});if(!td)return;if(td.cert){toast('이미 완료된 투두예요');return;}if(td.pend){toast('크루원 인증 대기 중이에요');return;}td.done=!td.done;if(!td.done)td.txt='';rTodos();if(td.done)toast('완료! 아래에 기록을 남기고 크루에 올려요',1800);}
+function onTT(id,el){var td=todos.find(function(x){return x.id===id;});if(!td)return;td.txt=el.value;var ok=el.value.trim().length>=MIN;el.className='cta'+(ok?' ok':'');var h=document.getElementById('tch-'+id);if(h){h.className='chint'+(ok?' ok':'');h.textContent=ok?'✓ 작성 완료':el.value.length+'/'+MIN+'자';}var btn=document.querySelector('[onclick="subT('+id+')"]');if(btn){btn.className='cbtn'+(ok?' rt':'');btn.disabled=!ok;btn.textContent=ok?'크루 피드에 올리기':'✏️ '+MIN+'자 이상 작성';}}
+function subT(id){var td=todos.find(function(x){return x.id===id;});if(!td||td.txt.trim().length<MIN)return;td.pend=true;var j=gJ(G.job);G.feed.unshift({av:G.av,nm:G.nick,job:j.name,qn:(td.ic||'')+' '+td.t,ct:'text',txt:td.txt,xp:TXP,isH:false,vMe:false,vs:0,cr:true,tid:id});rFeed();rTodos();toast('크루 피드에 올렸어요! 크루원 인증을 기다려요',2500);}
+function crewV(fi){var f=G.feed[fi];if(!f||!f.cr)return;if(f.vMe){f.vMe=false;f.vs=Math.max(0,f.vs-1);}else{f.vMe=true;f.vs++;if(f.vs===1&&f.tid!==-1){var td=todos.find(function(x){return x.id===f.tid;});if(td&&!td.cert){td.cert=true;td.pend=false;G.exp+=TXP;G.txp+=TXP;G.wx+=TXP;G.wd++;G.td++;chkLv();uExp();rTodos();uChar();uMRep();uMore();toast('크루원이 인증해줬어요! +'+TXP+' XP 지급!',2500);f.cr=false;}}}rFeed();}
+
+function rFeed(){
+  var el=document.getElementById('flist');
+  if(!G.feed||G.feed.length===0){
+    el.innerHTML='<div style="color:#bbb;font-size:12px;text-align:center;padding:24px;line-height:1.9;">아직 피드가 없어요<br>습관을 인증하면 자동으로 올라와요!</div>';
+    return;
+  }
+  var html='';
+  for(var fi=0;fi<Math.min(G.feed.length,10);fi++){
+    var f=G.feed[fi];
+    var ago=fi===0?'방금':fi===1?'5분 전':'1시간 전';
+    var tl=f.ct==='photo'?'📸 사진 인증':f.ct==='text'?'✍️ 텍스트':'⚡ 완료';
+    var vbadge=f.cr?'':' <span style="font-size:8px;background:#eef5ee;border:1px solid #b0d4b8;color:#3a7a5a;border-radius:20px;padding:1px 6px;font-weight:600;margin-left:3px;">✓</span>';
+    var ftag=f.isH?'h':'t';
+    var ftaglbl=f.isH?'🔄 습관':'✅ 투두';
+    var qstat=f.cr?('크루 인증 필요 · +'+TXP+' XP 대기'):(tl+(f.isH?' · +'+f.xp+' XP':''));
+    var photoDiv=f.ct==='photo'?('<div style="width:100%;height:90px;display:flex;align-items:center;justify-content:center;background:var(--al);"><span style="font-size:36px;">'+(G.g==='f'?'🧘‍♀️':'🏋️')+'</span></div>'):'';
+    var txtDiv=f.txt?('<div style="padding:7px 13px 6px;font-size:12px;color:#444;line-height:1.6;">'+f.txt+'</div>'):'';
+    var actBtns='';
+    if(f.cr){
+      actBtns='<button class="vbtn'+(f.vMe?' ok':'')+'" onclick="crewV('+fi+')">'+(f.vMe?'✓ 인증함':'👍 인증하기')+' <span>'+f.vs+'</span></button>';
+      actBtns+='<div class="xpe"><span>⏳ '+f.vs+'/1명 인증</span></div>';
+    } else {
+      actBtns='<button class="vbtn'+(f.vMe?' ok':'')+'" onclick="vH('+fi+')">'+(f.vMe?'✓ 인증함':'👍 인증하기')+' <span>'+f.vs+'</span></button>';
+      actBtns+='<div class="xok"><span>✓ +'+f.xp+' XP</span></div>';
+      // 반응 이모지
+      var reacts=[['🔥','fire'],['💪','strong'],['🌸','flower']];
+      var rhtml='<div style="display:flex;gap:4px;margin-left:auto;">';
+      for(var ri=0;ri<reacts.length;ri++){
+        var em=reacts[ri][0];
+        var rkey=reacts[ri][1];
+        var cnt=(f.react&&f.react[rkey])||0;
+        var mine=f.myReact===rkey;
+        var rbg=mine?'var(--al)':'#f9f9f7';
+        var rbc=mine?'var(--ab)':'#e8e8e4';
+        rhtml+='<button data-fi="'+fi+'" data-rk="'+rkey+'" onclick="addReact(+this.dataset.fi,this.dataset.rk)" style="display:flex;align-items:center;gap:2px;background:'+rbg+';border:1px solid '+rbc+';border-radius:14px;padding:3px 7px;font-size:10px;cursor:pointer;">'+em+' <span style="font-size:9px;color:#888;">'+cnt+'</span></button>';
+      }
+      rhtml+='</div>';
+      actBtns+=rhtml;
+    }
+    html+='<div class="fc">';
+    html+='<div class="fhdr"><div class="fav">'+f.av+'</div>';
+    html+='<div style="flex:1;"><div style="color:#1a1a1a;font-size:12px;font-weight:600;">'+f.nm+vbadge+'</div>';
+    html+='<div style="color:#bbb;font-size:10px;margin-top:1px;">'+f.job+' · '+ago+'</div></div>';
+    html+='<div class="ftag '+ftag+'">'+ftaglbl+'</div></div>';
+    html+='<div class="fqb"><div style="font-size:8px;color:#bbb;margin-bottom:3px;">'+qstat+'</div>';
+    html+='<div class="fqn">'+f.qn+'</div></div>';
+    html+=photoDiv+txtDiv;
+    html+='<div class="fact">'+actBtns+'</div>';
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+function vH(fi){var f=G.feed[fi];if(!f)return;if(f.vMe){f.vMe=false;f.vs=Math.max(0,f.vs-1);}else{f.vMe=true;f.vs++;toast('인증했어요!');}rFeed();}
+function rCrew(){
+  var j=gJ(G.job);
+  var members=[
+    {nm:G.nick+' (나)',job:j.name,av:G.av,pct:Math.round((G.certs/Math.max(1,habits.length))*100)},
+    {nm:'현우',job:'패턴 파괴자',av:'💼',pct:100},
+    {nm:'지은',job:'마음챙김러',av:'🥇',pct:72},
+    {nm:'서연',job:'웰니스 라이프',av:'🌿',pct:56}
+  ];
+  members.sort(function(a,b){return b.pct-a.pct;});
+  var medals=['🥇','🥈','🥉',''];
+  document.getElementById('mlist').innerHTML=members.map(function(m,i){
+    var isMe=m.nm.indexOf('(나)')>=0;
+    return '<div class="cmem" style="'+(isMe?'background:var(--al);border-radius:10px;padding:8px 6px;margin:-4px -6px;':'')+'">'+
+    '<div style="font-size:14px;width:20px;text-align:center;flex-shrink:0;">'+(medals[i]||'')+'</div>'+
+    '<div class="gav">'+m.av+'</div>'+
+    '<div style="flex:1;"><div style="color:#1a1a1a;font-size:11px;font-weight:'+(isMe?'700':'500')+';">'+m.nm+'</div><div style="color:#bbb;font-size:9px;">'+m.job+'</div><div class="gbg"><div class="gbf" style="width:'+m.pct+'%"></div></div></div>'+
+    '<div style="font-size:11px;color:'+(isMe?'var(--a)':'#999')+';width:32px;text-align:right;font-weight:700;">'+m.pct+'%</div></div>';
+  }).join('');
+}
+function uMRep(){var tot=habits.length,rate=tot>0?Math.min(100,Math.round((G.wd/tot)*100)):0,grade=rate>=90?'🔥':rate>=70?'🌿':rate>=50?'💪':'🌱';document.getElementById('wdn').textContent=G.wd;document.getElementById('wxp').textContent=G.wx;document.getElementById('wrt').textContent=rate+'%';document.getElementById('wgd').textContent=grade;}
+function uMore(){document.getElementById('ctxp').textContent=G.txp.toLocaleString();document.getElementById('ctce').textContent=G.certs;document.getElementById('ctto').textContent=G.td;document.getElementById('cttt').textContent=G.ttls.length;var cs=document.getElementById('ctstr');if(cs)cs.textContent=G.streak+'일 🔥';var cr=document.getElementById('ctrat');if(cr)cr.textContent=G.rating.toLocaleString();
+  // 뱃지 활성화
+  var photoCerts=G.feed.filter(function(f){return f.isH&&f.ct==='photo';}).length;
+  uBadge('badge-photo',photoCerts>=10,'📸');
+  uBadge('badge-streak7',G.streak>=7,'🔥');
+  uBadge('badge-combo10',G.combo>=10,'⚡');
+  uBadge('badge-crew20',G.td>=20,'🤝');
+  uBadge('badge-transcend',G.job==='transcend','✦');
+}
+function uBadge(id,unlocked,em){
+  var el=document.getElementById(id);if(!el)return;
+  el.style.opacity=unlocked?'1':'0.3';
+  var inner=el.querySelector('div');
+  if(unlocked&&inner)inner.style.boxShadow='0 0 0 3px var(--a)';
+}
+function uExp(){var pct=Math.min(100,Math.round((G.exp/G.xm)*100));document.getElementById('heb').style.width=pct+'%';document.getElementById('hep').textContent=G.exp.toLocaleString()+'/'+G.xm.toLocaleString();document.getElementById('tlv').textContent='Lv.'+G.lv+' · '+G.exp.toLocaleString()+'/'+G.xm.toLocaleString()+' XP';}
+function uHp(){}
+
+function chkLv(){
+  while(G.exp>=G.xm){
+    G.exp-=G.xm;G.lv++;G.xm=gXp(G.lv);
+    var st=gSt(G.lv),prev=gSt(G.lv-1);
+    toast('Lv.'+G.lv+' 달성!'+(G.lv===50?' 🎆 초월자 해금!!!':''),1800);
+    if(st.name!==prev.name){setTimeout(function(s){return function(){showJU(s);};}(st),1600);break;}
+  }
+}
+
+function showJU(stage){
+  var isT=stage.name==='초월자';
+  document.getElementById('jui').textContent=isT?'✦':stage.icon;
+  document.getElementById('jus').textContent=isT?'Lv.50 달성!!!':stage.name+' 단계 달성!';
+  document.getElementById('jut').textContent=isT?'초월자 해금!!!':stage.name+' 단계 전직 해금!';
+  document.getElementById('jud').textContent=isT?'당신은 살자의 전설이 됐습니다. 갓생이 곧 숨쉬기가 된 경지.':'새로운 정체성으로 전직할 수 있어요!';
+  var tierIdx=gd().stages.indexOf(stage);
+  var tier=gd().tiers[tierIdx]||gd().tiers[0];
+  if(isT){
+    document.getElementById('jujbs').innerHTML=tier.jobs.map(function(j){
+      return '<div data-jk="'+j.key+'" onclick="pickJ(this.dataset.jk)" style="background:linear-gradient(135deg,#1a1a1a,#333);border:2px solid #555;border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;"><div style="font-size:36px;margin-bottom:6px;">'+j.icon+'</div><div style="font-size:14px;font-weight:800;color:#fff;letter-spacing:2px;margin-bottom:4px;">'+j.name+'</div><div style="font-size:9px;color:#aaa;">"'+j.sl+'"</div></div>';
+    }).join('');
+  } else {
+    document.getElementById('jujbs').innerHTML=tier.jobs.map(function(j){
+      return '<div data-jk="'+j.key+'" onclick="pickJ(this.dataset.jk)" style="background:#fff;border:1.5px solid var(--ab);border-radius:12px;padding:11px 8px;text-align:center;cursor:pointer;"><div style="font-size:22px;margin-bottom:3px;">'+j.icon+'</div><div style="font-size:10px;font-weight:800;color:#1a1a1a;margin-bottom:2px;">'+j.name+'</div><div style="font-size:8px;color:var(--am);">"'+j.sl+'"</div></div>';
+    }).join('');
+  }
+  sOv('ov-ju');
+}
+
+function rJTree(){
+  var stages=gd().stages;
+  document.getElementById('jstps').innerHTML=stages.map(function(s){
+    var cur=gSt(G.lv),un=G.lv>=s.lv,isT=s.name==='초월자';
+    return '<div style="flex:1;text-align:center;background:'+(isT&&un?'#1a1a1a':isT?'#f4f4f2':'#fff')+';border-radius:8px;padding:6px 2px;border:2px solid '+(cur.name===s.name?(isT?'#888':'var(--a)'):'#efefeb')+';"><div style="font-size:11px;">'+s.icon+'</div><div style="font-size:7px;font-weight:700;color:'+(isT&&un?'#fff':un?'#1a1a1a':'#bbb')+';">'+s.name+'</div><div style="font-size:6px;color:'+(isT&&un?'#aaa':'#bbb')+';">Lv.'+s.lv+'</div></div>';
+  }).join('');
+  var html='';
+  gd().tiers.forEach(function(tier,ti){
+    var stage=stages[ti];
+    var isT=stage&&stage.name==='초월자';
+    if(isT){
+      html+='<div style="margin-bottom:16px;">';
+      html+='<div style="font-size:10px;font-weight:700;color:#888;letter-spacing:1.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;"><span>✦ 초월자 (Lv.50+)</span><div style="flex:1;height:1px;background:#ddd;"></div><span style="font-size:8px;color:#bbb;">전설의 경지</span></div>';
+      tier.jobs.forEach(function(j){
+        var isCur=j.key===G.job,ok=G.lv>=50;
+        var bg=isCur?'linear-gradient(135deg,#1a1a1a,#333)':ok?'#fff':'#f9f9f7';
+        var border=isCur?'2px solid #555':ok?'2px solid #888':'2px dashed #ddd';
+        var op=(!ok&&!isCur)?'opacity:.7;':'';
+        html+='<div data-jk="'+j.key+'" onclick="tryJ(this.dataset.jk)" style="cursor:pointer;border-radius:16px;padding:20px;text-align:center;position:relative;background:'+bg+';border:'+border+';'+op+'">';
+        if(!ok&&!isCur)html+='<div style="position:absolute;top:10px;right:10px;font-size:9px;background:#e8e8e4;color:#999;border-radius:7px;padding:2px 8px;font-weight:700;">Lv.50 필요</div>';
+        if(isCur)html+='<div style="position:absolute;top:10px;right:10px;font-size:9px;background:#555;color:#fff;border-radius:7px;padding:2px 8px;font-weight:700;">현재</div>';
+        if(ok&&!isCur)html+='<div style="position:absolute;top:10px;right:10px;font-size:9px;background:#3a7a5a;color:#fff;border-radius:7px;padding:2px 8px;font-weight:700;">가능!</div>';
+        html+='<div style="font-size:44px;margin-bottom:10px;">'+j.icon+'</div>';
+        html+='<div style="color:'+(isCur?'#fff':'#1a1a1a')+';font-size:18px;font-weight:800;margin-bottom:5px;letter-spacing:3px;">'+j.name+'</div>';
+        html+='<div style="font-size:11px;color:'+(isCur?'#aaa':'#888')+';line-height:1.5;margin-bottom:10px;font-style:italic;">"'+j.sl+'"</div>';
+        html+='<div style="font-size:10px;color:'+(isCur?'#888':'#aaa')+';line-height:1.7;margin-bottom:12px;">'+j.st+'</div>';
+        html+='<div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">';
+        j.h.forEach(function(hb){html+='<span style="font-size:9px;background:'+(isCur?'rgba(255,255,255,.1)':'#f4f4f2')+';color:'+(isCur?'#ddd':'#666')+';border-radius:20px;padding:3px 8px;font-weight:600;">'+hb.icon+' '+hb.t+'</span>';});
+        html+='</div></div>';
+      });
+      html+='</div>';
+    } else {
+      html+='<div style="margin-bottom:16px;">';
+      html+='<div style="font-size:10px;font-weight:700;color:#bbb;letter-spacing:1.5px;margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span>'+(stage?stage.icon+' '+stage.name+' (Lv.'+stage.lv+'+)':'')+'</span><div style="flex:1;height:1px;background:#efefeb;"></div></div>';
+      html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+      tier.jobs.forEach(function(j){
+        var isCur=j.key===G.job,ok=stage&&G.lv>=stage.lv;
+        html+='<div class="jc'+(isCur?' cur':'')+(ti===1?' t2':ti===2?' t3':'')+'" data-jk="'+j.key+'" onclick="tryJ(this.dataset.jk)">';
+        if(isCur)html+='<div class="jbt c">현재</div>';
+        else if(ok)html+='<div class="jbt n">가능</div>';
+        else html+='<div class="jbt l">Lv.'+(stage?stage.lv:'')+'</div>';
+        html+='<div style="font-size:24px;margin-bottom:5px;">'+j.icon+'</div>';
+        html+='<div style="color:#1a1a1a;font-size:11px;font-weight:800;margin-bottom:3px;">'+j.name+'</div>';
+        html+='<div style="font-size:9px;color:var(--am);line-height:1.4;">"'+j.sl+'"</div>';
+        html+='<div style="font-size:8px;margin-top:4px;font-weight:600;color:'+(ok?'#3a7a5a':'#bbb')+';">Lv.'+(stage?stage.lv:'')+'+ 필요</div>';
+        html+='</div>';
+      });
+      html+='</div></div>';
+    }
+  });
+  document.getElementById('jtree').innerHTML=html;
+}
+function tryJ(k){
+  var tierIdx=gd().tiers.findIndex(function(t){return t.jobs.some(function(j){return j.key===k;});});
+  var stage=gd().stages[tierIdx]||gd().stages[0];
+  if(G.lv<stage.lv){toast('Lv.'+stage.lv+'+ 달성 후 전직 가능');return;}
+  if(k===G.job)return;doJob(k);
+}
+function doJob(k){
+  var j=gJ(k);G.job=k;
+  habits=mkHabits(j);
+  var jdi=document.getElementById('jdi');
+  var jdn=document.getElementById('jdn');
+  var jds=document.getElementById('jds');
+  jdi.textContent=j.icon;
+  jdn.textContent=j.name;
+  jds.textContent='"'+j.sl+'"';
+  var ovjd=document.getElementById('ov-jd');
+  if(k==='transcend'){
+    ovjd.style.background='rgba(10,10,10,.97)';
+    jdn.style.color='#fff';
+    jds.style.color='#aaa';
+  } else {
+    ovjd.style.background='rgba(249,249,247,.97)';
+    jdn.style.color='#1a1a1a';
+    jds.style.color='var(--am)';
+  }
+  sOv('ov-jd');uChar();rMini();rJTree();rHabits();uMRep();
+  if(G.ttls.indexOf('b3')<0){G.ttls.push('b3');setTimeout(function(){trigTtl('b3');},800);}
+  if(k==='transcend'&&G.ttls.indexOf('x1')<0){G.ttls.push('x1');setTimeout(function(){trigTtl('x1');},2000);}
+}
+function tryDrop(){if(Math.random()>0.05)return;var pool=DROP.filter(function(id){var t=TTLS.find(function(x){return x.id===id;});return t&&G.ttls.indexOf(id)<0;});if(!pool.length)return;trigTtl(pool[Math.floor(Math.random()*pool.length)]);}
+function trigTtl(id){var t=TTLS.find(function(x){return x.id===id;});if(!t)return;curT=t;if(G.ttls.indexOf(id)<0)G.ttls.push(id);var rc={S:'#b05040',A:'#a07020',B:'#3a7a5a',C:'#666'};document.getElementById('tui').textContent=t.i;document.getElementById('tun').textContent=t.n;document.getElementById('tud').textContent=t.d;document.getElementById('tur').textContent=t.r+'급 칭호';document.getElementById('tur').style.color=rc[t.r]||'#888';sOv('ov-ttl');rTtls();}
+function eqTtl(){if(!curT)return;G.eqT=curT.id;hOv('ov-ttl');uChar();rTtls();toast('칭호 "'+curT.n+'" 장착됐어요!');}
+function setEq(id){G.eqT=id;uChar();rTtls();var t=TTLS.find(function(x){return x.id===id;});if(t)toast('"'+t.n+'" 장착됐어요!');}
+function inviteFriend(){
+  var link='https://salja.app/invite/'+G.nick;
+  if(navigator.clipboard){navigator.clipboard.writeText(link).then(function(){toast('초대 링크가 복사됐어요! 친구에게 공유해봐요 🔗',3000);}).catch(function(){toast('링크: '+link,4000);});}
+  else{toast('링크: '+link,4000);}
+}
+function fltT(f,btn){tFlt=f;document.querySelectorAll('#tab-more button[onclick^="fltT"]').forEach(function(b){b.style.background='#fff';b.style.color='';});btn.style.background='var(--a)';btn.style.color='#fff';rTtls();}
+function rTtls(){var u=G.ttls;document.getElementById('ttlcn').textContent=u.length+' / '+TTLS.length+' 획득';var rBg={S:'#fff0ec',A:'#fdf8f0',B:'#eef5ee',C:'#f4f4f2'};var fl=TTLS.filter(function(t){if(tFlt==='u')return u.indexOf(t.id)>=0;if(['S','A','B','C'].indexOf(tFlt)>=0)return t.r===tFlt;return true;});document.getElementById('ttll').innerHTML=fl.map(function(t){var isU=u.indexOf(t.id)>=0,isE=G.eqT===t.id;return '<div class="tc'+(isU?isE?'" style="border-color:var(--a);background:var(--al);"':'':' lk"')+'">'+'<div class="tib2" style="background:'+rBg[t.r]+';">'+t.i+'</div>'+'<div style="flex:1;"><div style="font-size:11px;font-weight:700;color:#1a1a1a;margin-bottom:2px;">'+(isE?'✓ ':'')+t.n+(isE?' <span style="font-size:8px;background:var(--a);color:#fff;border-radius:18px;padding:1px 7px;">장착중</span>':'')+'</div><div style="font-size:10px;color:#999;line-height:1.4;">'+t.d+'</div>'+(isU&&!isE?'<button onclick="setEq(\''+t.id+'\')" style="margin-top:5px;background:var(--al);border:1px solid var(--ab);border-radius:7px;padding:3px 10px;font-size:9px;color:var(--a);cursor:pointer;font-weight:600;">장착하기</button>':'')+'</div>'+'<div class="tr '+t.r+'">'+t.r+'급</div></div>';}).join('');}
+
+function rReport(){var rate=habits.length>0?Math.min(100,Math.round((G.wd/habits.length)*100)):0;var grade=rate>=90?'🔥 갓생러':rate>=70?'🌿 갓생 중':rate>=50?'💪 분발 중':'🌱 시작 단계';document.getElementById('rgd').textContent=grade;document.getElementById('rdn').textContent=G.wd;document.getElementById('rxp').textContent=G.wx.toLocaleString();document.getElementById('rrt').textContent=rate+'%';var j=gJ(G.job);document.getElementById('rcmt').textContent=G.wd>0?'"'+j.sl+'"':'습관을 인증하면 XP가 쌓여요!';var bars=[100,80,100,60,100,Math.round(rate),0],maxH=52;document.getElementById('rbars').innerHTML=bars.map(function(p,i){var fut=i===6,h2=Math.max(3,Math.round((p/100)*maxH));var col=fut?'#e8e8e4':p>=80?'var(--br)':p>=50?'var(--am)':'#ddd';return '<div class="bw" style="height:'+maxH+'px;">'+(fut?'':'<span style="font-size:7px;font-weight:700;color:#999;margin-bottom:2px;">'+p+'%</span>')+'<div class="bc" style="height:'+h2+'px;background:'+col+';"></div></div>';}).join('');var cats=['운동','독서','명상','기상','수면'],dm={},tm={};habits.forEach(function(q){tm[q.c]=(tm[q.c]||0)+1;if(q.cert)dm[q.c]=(dm[q.c]||0)+1;});document.getElementById('rrts').innerHTML=cats.map(function(cat){var cm=cM[cat]||cM['기타'],d=dm[cat]||0,t2=tm[cat]||0,r=t2>0?Math.round((d/t2)*100):0,rc=r>=80?'#3a7a5a':r>=50?'#a07020':'#888';return '<div class="ri"><div class="rib" style="background:'+cm.c+'18;">'+cm.i+'</div><div style="flex:1;"><div style="font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:3px;display:flex;justify-content:space-between;"><span>'+cat+'</span><span style="font-size:10px;font-weight:700;color:'+rc+';">'+r+'%</span></div><div class="rbg2"><div class="rbf" style="width:'+r+'%;background:'+cm.c+';"></div></div><div style="font-size:9px;color:#999;margin-top:2px;">'+d+'/'+t2+'회 인증완료</div></div></div>';}).join('');}
+
+function chgP(){var emojis=G.g==='f'?fEm:G.g==='m'?mEm:mEm;document.getElementById('egrd').innerHTML=emojis.map(function(e){return '<div onclick="setPE(\''+e+'\')" style="width:44px;height:44px;border-radius:50%;background:#f9f9f7;border:1.5px solid #e8e8e4;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;">'+e+'</div>';}).join('');sMod('pm');}
+function setPE(e){G.av=e;['hav','ctav'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=e;});hMod('pm');toast('프로필 사진이 변경됐어요!');}
+function uStreak(){
+  // 스트릭 배지 표시
+  var streakBg=document.getElementById('streak-badge');
+  if(!streakBg)return;
+  streakBg.textContent=G.streak+'일 연속 🔥';
+  streakBg.style.display=G.streak>0?'inline-flex':'none';
+}
+function sndC(){var inp=document.getElementById('chinp'),msg=inp.value.trim();if(!msg)return;document.getElementById('chatb').innerHTML+='<div class="cm me"><div class="cmn">'+G.nick+'</div><div class="cmt">'+msg+'</div></div>';inp.value='';document.getElementById('chatb').scrollTop=9999;}
+
+function swHT(tab,btn){
+  document.getElementById('ht-h').style.display=tab==='h'?'flex':'none';
+  document.getElementById('ht-t').style.display=tab==='t'?'flex':'none';
+  document.querySelectorAll('.htab .ht').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+}
+function swM(tab,el){
+  ['ht-h','ht-t','tab-crew','tab-rank','tab-job','tab-more'].forEach(function(id){var e=document.getElementById(id);if(e)e.style.display='none';});
+  document.querySelector('.htab').style.display='none';
+  if(tab==='home'){document.getElementById('ht-h').style.display='flex';document.querySelector('.htab').style.display='flex';}
+  else if(tab==='crew'){document.getElementById('tab-crew').style.display='flex';rCrew();rFeed();rCrewBanner();}
+  else if(tab==='rank'){document.getElementById('tab-rank').style.display='block';rRank();}
+  else if(tab==='job'){document.getElementById('tab-job').style.display='block';rJTree();}
+  else if(tab==='more'){document.getElementById('tab-more').style.display='block';rTtls();uMore();rMyCrewCard();uGoal();}
+  document.querySelectorAll('.bnav .ni').forEach(function(n){n.classList.remove('on');});
+  if(el)el.classList.add('on');
+}
+function rRank(){
+  var j=gJ(G.job);
+  var rankData=[
+    {rank:1,av:'🔥',nick:'갓생마스터',job:'새벽 전사',xp:9820,crewType:'crew',crew:'챌린저스 크루'},
+    {rank:2,av:'💪',nick:'철인킴',job:'철인',xp:8740,crewType:'crew',crew:'몸만드는사람들'},
+    {rank:3,av:'🌅',nick:'새벽4시',job:'새벽형 인간',xp:7650,crewType:'solo',crew:''},
+    {rank:4,av:'📚',nick:'독서왕',job:'지식 탐험가',xp:6890,crewType:'crew',crew:'책읽는크루'},
+    {rank:5,av:'🧘',nick:'마음챙김',job:'마음챙김러',xp:6200,crewType:'solo',crew:''},
+    {rank:6,av:'⚡',nick:'실행력머신',job:'실행력 머신',xp:5980,crewType:'crew',crew:'실행크루'},
+    {rank:7,av:'🌿',nick:'웰니스걸',job:'웰니스 라이프',xp:5430,crewType:'solo',crew:''},
+    {rank:8,av:'🎯',nick:'목표추적',job:'목표 추적자',xp:4980,crewType:'crew',crew:'목표달성단'},
+    {rank:9,av:'🔬',nick:'패턴분석가',job:'패턴 파괴자',xp:4200,crewType:'solo',crew:''},
+    {rank:10,av:'🧭',nick:'방향결정자',job:'방향 결정자',xp:3800,crewType:'crew',crew:'리더스크루'},
+    {rank:null,av:G.av,nick:G.nick,job:j.name,xp:G.txp,crewType:G.crewType,crew:G.crewName,isMe:true},
+  ];
+  G._rankData=rankData;
+  renderRankList('all');
+}
+
+function renderRankList(filter){
+  var rankData=G._rankData||[];
+  // 내 데이터 분리
+  var myData=rankData.find(function(r){return r.isMe;});
+  var others=rankData.filter(function(r){return !r.isMe;});
+
+  // 필터 적용
+  var filtered=filter==='all'?others:others.filter(function(r){return r.crewType===filter;});
+
+  // 내 XP 기준 순위 계산
+  var myRank=filtered.filter(function(r){return r.xp>G.txp;}).length+1;
+  var totalInFilter=filtered.length+1;
+  var myPct=Math.max(1,Math.round((myRank/Math.max(totalInFilter,100))*100));
+
+  // 내 순위 카드 업데이트
+  document.getElementById('my-rank-num').textContent='#'+myRank;
+  document.getElementById('my-rank-av').textContent=G.av;
+  document.getElementById('my-rank-nick').textContent=G.nick;
+  document.getElementById('my-rank-job').textContent=gJ(G.job).name;
+  document.getElementById('my-rank-xp').textContent=G.txp.toLocaleString()+' XP';
+  document.getElementById('my-rank-pct').textContent=myPct;
+
+  // 리스트 렌더링
+  var medals=['🥇','🥈','🥉'];
+  if(filtered.length===0){
+    document.getElementById('rank-list').innerHTML='<div style="color:#bbb;font-size:12px;text-align:center;padding:30px;">아직 데이터가 없어요</div>';
+    return;
+  }
+
+  document.getElementById('rank-list').innerHTML=filtered.map(function(r,i){
+    var isCrew=r.crewType==='crew';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #efefeb;">'
+    +'<div style="font-size:'+(i<3?'18':'13')+'px;width:26px;text-align:center;font-weight:800;color:'+(i<3?'#1a1a1a':'#bbb')+';flex-shrink:0;">'+(i<3?medals[i]:r.rank)+'</div>'
+    +'<div style="width:40px;height:40px;border-radius:50%;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:1px solid var(--ab);">'+r.av+'</div>'
+    +'<div style="flex:1;min-width:0;">'
+    +'<div style="color:#1a1a1a;font-size:12px;font-weight:600;">'+r.nick+'</div>'
+    +'<div style="color:#bbb;font-size:9px;margin-top:2px;">'+r.job
+    +(isCrew?' · <span style="color:#3a7a5a;font-weight:600;">🤝 '+r.crew+'</span>':' · <span style="color:#888;">🧘 솔로</span>')
+    +'</div>'
+    +'</div>'
+    +'<div style="text-align:right;flex-shrink:0;">'
+    +'<div style="color:var(--a);font-size:12px;font-weight:700;">'+r.xp.toLocaleString()+'</div>'
+    +'<div style="color:#bbb;font-size:8px;">XP</div>'
+    +'</div></div>';
+  }).join('');
+}
+
+function filterRank(type,btn){
+  document.querySelectorAll('#tab-rank button[onclick^="filterRank"]').forEach(function(b){
+    b.style.background='#fff';
+    b.style.color='#666';
+    b.style.borderColor='#e0e0dc';
+  });
+  btn.style.background='var(--a)';
+  btn.style.color='#fff';
+  btn.style.borderColor='var(--a)';
+  renderRankList(type);
+}
+function rCrewBanner(){
+  var banner=document.getElementById('crew-type-banner');
+  if(!banner)return;
+  if(G.crewType==='solo'){
+    banner.innerHTML='<div style="background:#f4f4f2;border-radius:11px;padding:10px 13px;display:flex;align-items:center;gap:10px;">'
+    +'<div style="font-size:20px;">🧘</div>'
+    +'<div style="flex:1;"><div style="font-size:11px;font-weight:700;color:#1a1a1a;">솔로 모드</div>'
+    +'<div style="font-size:9px;color:#999;margin-top:1px;">혼자서 갓생 중 · 전국 랭킹 참여</div></div>'
+    +'<button onclick="showCrewJoin()" style="background:var(--a);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:9px;font-weight:600;cursor:pointer;">크루 찾기</button>'
+    +'</div>';
+  } else if(G.crewType==='friend'){
+    banner.innerHTML='<div style="background:#eef5ee;border:1px solid #b0d4b8;border-radius:11px;padding:10px 13px;display:flex;align-items:center;gap:10px;">'
+    +'<div style="font-size:20px;">👥</div>'
+    +'<div style="flex:1;"><div style="font-size:11px;font-weight:700;color:#3a7a5a;">우리 크루</div>'
+    +'<div style="font-size:9px;color:#5a9a7a;margin-top:1px;">지인 크루 · 비공개</div></div>'
+    +'<button onclick="inviteFriend()" style="background:#3a7a5a;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:9px;font-weight:600;cursor:pointer;">초대하기</button>'
+    +'</div>';
+  } else {
+    banner.innerHTML='<div style="background:var(--al);border:1px solid var(--ab);border-radius:11px;padding:10px 13px;display:flex;align-items:center;gap:10px;">'
+    +'<div style="font-size:20px;">🌐</div>'
+    +'<div style="flex:1;"><div style="font-size:11px;font-weight:700;color:var(--a);">공개 크루 참여 중</div>'
+    +'<div style="font-size:9px;color:var(--am);margin-top:1px;">전국 갓생러들과 함께</div></div>'
+    +'</div>';
+  }
+}
+
+function rMyCrewCard(){
+  var el=document.getElementById('my-crew-content');
+  if(!el)return;
+  if(G.crewType==='solo'){
+    el.innerHTML='<div style="text-align:center;padding:10px 0;">'
+    +'<div style="font-size:32px;margin-bottom:8px;">🧘</div>'
+    +'<div style="color:#1a1a1a;font-size:13px;font-weight:600;margin-bottom:4px;">솔로 모드로 갓생 중</div>'
+    +'<div style="color:#999;font-size:11px;margin-bottom:12px;">전국 랭킹에서 경쟁하고 있어요</div>'
+    +'<button onclick="showCrewJoin()" style="background:var(--a);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:11px;font-weight:600;cursor:pointer;">크루 찾아보기</button>'
+    +'</div>';
+  } else if(G.crewType==='friend'){
+    el.innerHTML='<div>'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+    +'<div style="font-size:12px;font-weight:700;color:#1a1a1a;">🤝 우리 크루</div>'
+    +'<button onclick="inviteFriend()" style="background:var(--al);border:1px solid var(--ab);color:var(--a);border-radius:7px;padding:3px 10px;font-size:9px;font-weight:600;cursor:pointer;">+ 초대</button>'
+    +'</div>'
+    +'<div style="color:#999;font-size:11px;text-align:center;padding:12px 0;">초대 링크를 공유해서 친구를 불러오세요!</div>'
+    +'<button onclick="inviteFriend()" style="width:100%;background:var(--a);color:#fff;border:none;border-radius:10px;padding:11px;font-size:11px;font-weight:600;cursor:pointer;margin-top:8px;">초대 링크 복사 🔗</button>'
+    +'</div>';
+  } else {
+    el.innerHTML='<div style="text-align:center;padding:10px 0;">'
+    +'<div style="font-size:32px;margin-bottom:8px;">🌐</div>'
+    +'<div style="color:#1a1a1a;font-size:13px;font-weight:600;margin-bottom:4px;">공개 크루 탐색</div>'
+    +'<div style="color:#999;font-size:11px;margin-bottom:12px;">관심있는 크루에 참여해보세요</div>'
+    +'<button onclick="showCrewJoin()" style="background:var(--a);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:11px;font-weight:600;cursor:pointer;">크루 둘러보기</button>'
+    +'</div>';
+  }
+}
+
+function showCrewJoin(){
+  // 공개 크루 목록 팝업
+  sOv('ov-crew-join');
+  rPublicCrews();
+}
+
+function rPublicCrews(){
+  var el=document.getElementById('public-crew-list');
+  if(!el)return;
+  var crews=[
+    {icon:'🌅',name:'새벽기상단',leader:'갓생인플루언서A',members:87,max:100,type:'influencer'},
+    {icon:'💪',name:'몸만들기크루',leader:'피트니스B',members:100,max:100,type:'influencer'},
+    {icon:'📚',name:'독서갓생러',leader:'자기계발C',members:65,max:100,type:'influencer'},
+    {icon:'🧘',name:'마음챙김크루',leader:'웰니스D',members:8,max:10,type:'public'},
+    {icon:'🎯',name:'목표달성단',leader:'동기부여E',members:3,max:10,type:'public'},
+  ];
+  el.innerHTML=crews.map(function(c){
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #efefeb;">'
+    +'<div style="width:44px;height:44px;border-radius:12px;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">'+c.icon+'</div>'
+    +'<div style="flex:1;">'
+    +'<div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;">'
+    +'<span style="color:#1a1a1a;font-size:12px;font-weight:700;">'+c.name+'</span>'
+    +(c.type==='influencer'?'<span style="font-size:8px;background:#fff3cd;color:#a07020;border-radius:18px;padding:1px 6px;font-weight:600;">인플루언서</span>':'')
+    +'</div>'
+    +'<div style="color:#999;font-size:10px;">크루장 '+c.leader+' · '+c.members+'/'+(c.max||'∞')+'명'+(c.members>=(c.max||999)?'  <span style="color:#e05050;font-size:9px;font-weight:600;">마감</span>':'')+'</div>'
+    +'</div>'
+    +'<button data-cn="'+c.name+'" onclick="joinCrew(this.dataset.cn)" style="background:'+(c.members>=(c.max||999)?'#e8e8e4':'var(--a)')+';color:'+(c.members>=(c.max||999)?'#bbb':'#fff')+';border:none;border-radius:8px;padding:6px 12px;font-size:10px;font-weight:600;cursor:'+(c.members>=(c.max||999)?'not-allowed':'pointer')+';">'+  (c.members>=(c.max||999)?'마감':'참여')+'</button>'
+    +'</div>';
+  }).join('');
+}
+
+function joinCrew(name){
+  G.crewType='public';G.crewName=name;
+  hOv('ov-crew-join');
+  toast(name+' 크루에 참여했어요! 🎉',2500);
+  rCrewBanner();rMyCrewCard();rCrew();
+}
+
+function addReact(fi,key){
+  var f=G.feed[fi];if(!f)return;
+  if(!f.react)f.react={fire:0,strong:0,flower:0};
+  if(f.myReact===key){
+    f.react[key]=Math.max(0,(f.react[key]||0)-1);
+    f.myReact=null;
+  } else {
+    if(f.myReact)f.react[f.myReact]=Math.max(0,(f.react[f.myReact]||0)-1);
+    f.react[key]=(f.react[key]||0)+1;
+    f.myReact=key;
+  }
+  rFeed();
+}
+function pickJ(key){
+  doJob(key);
+  hOv('ov-ju');
+}
+// ===== 출석 보상 =====
+function showAttendance(){
+  var today=new Date().toDateString();
+  if(G.lastLogin===today){
+    toast('오늘 이미 출석했어요! 내일 또 와요 😊',2000);
+    return;
+  }
+  // 출석 연속일 계산
+  G.loginStreak++;
+  var day=G.loginStreak;
+  var rewards=[50,50,100,100,150,150,300];
+  var reward=rewards[Math.min(day-1,6)];
+  var icons=['📅','📅','⭐','⭐','🌟','🌟','🎉'];
+  var icon=icons[Math.min(day-1,6)];
+  document.getElementById('att-icon').textContent=icon;
+  document.getElementById('att-title').textContent=day===1?'오늘도 왔군요!':day+'일 연속 출석!';
+  document.getElementById('att-desc').textContent='연속 '+day+'일째 갓생 중 🔥';
+  document.getElementById('att-reward').textContent='+'+reward+' XP';
+  // 7일 달력 렌더링
+  var daysHtml='';
+  for(var i=1;i<=7;i++){
+    var done=i<=day;
+    var isToday=i===day;
+    daysHtml+='<div style="text-align:center;">'
+    +'<div style="width:32px;height:32px;border-radius:50%;background:'+(done?'var(--a)':'#f4f4f2')+';border:2px solid '+(isToday?'var(--am)':done?'var(--a)':'#e8e8e4')+';display:flex;align-items:center;justify-content:center;margin:0 auto 3px;">'
+    +(done?'<span style="color:#fff;font-size:12px;">✓</span>':'<span style="font-size:8px;color:#bbb;">'+i+'</span>')
+    +'</div>'
+    +'<div style="font-size:7px;color:'+(done?'var(--a)':'#ccc')+';">'+['월','화','수','목','금','토','일'][i-1]+'</div>'
+    +'</div>';
+  }
+  document.getElementById('att-days').innerHTML=daysHtml;
+  G._pendingAttReward=reward;
+  sOv('ov-attendance');
+}
+
+function claimAttendance(){
+  var today=new Date().toDateString();
+  G.lastLogin=today;
+  var reward=G._pendingAttReward||50;
+  G.exp+=reward;G.txp+=reward;G.seasonXp+=reward;
+  hOv('ov-attendance');
+  toast('출석 보상 +'+reward+' XP 지급! 🎁',2500);
+  // 7일 연속이면 특별 보상
+  if(G.loginStreak===7){
+    setTimeout(function(){toast('7일 연속 출석! 보너스 +200 XP 🎉',3000);G.exp+=200;G.txp+=200;chkLv();uExp();uChar();uMore();},1000);
+    G.loginStreak=0;
+  }
+  chkLv();uExp();uChar();uMore();
+  // 출석 버튼 비활성화
+  var btn=document.getElementById('att-btn');
+  if(btn){btn.textContent='✓ 출석완료';btn.style.background='#888';btn.onclick=null;}
+}
+
+// ===== 시즌 =====
+function rSeason(){
+  document.getElementById('season-title').textContent='시즌 '+G.season;
+  document.getElementById('season-my-xp').textContent=G.seasonXp.toLocaleString();
+  document.getElementById('season-my-rank').textContent='#'+Math.max(1,50-Math.floor(G.seasonXp/100));
+  document.getElementById('season-desc').textContent='이번 달 말일에 리셋돼요';
+}
+
+// ===== 목표 설정 =====
+function setGoalXp(xp){
+  document.querySelectorAll('.goal-opt').forEach(function(el){
+    el.style.borderColor='#e8e8e4';el.style.background='#fff';
+  });
+  event.currentTarget.style.borderColor='var(--a)';
+  event.currentTarget.style.background='var(--al)';
+  G.goalXp=xp;
+  uGoal();
+}
+
+function uGoal(){
+  var pct=Math.min(100,Math.round((G.txp/G.goalXp)*100));
+  var el=document.getElementById('goal-label');
+  if(el)el.textContent='목표: '+G.goalXp.toLocaleString()+' XP';
+  var pb=document.getElementById('goal-bar');
+  if(pb)pb.style.width=pct+'%';
+  var pp=document.getElementById('goal-pct');
+  if(pp)pp.textContent=pct+'%';
+  var ps=document.getElementById('goal-status');
+  if(ps)ps.textContent=G.txp.toLocaleString()+' / '+G.goalXp.toLocaleString()+' XP 달성';
+  var sl=document.getElementById('season-label');
+  if(sl)sl.textContent='시즌 '+G.season+' 진행 중';
+  var sx=document.getElementById('season-xp-label');
+  if(sx)sx.textContent='시즌 XP: '+G.seasonXp.toLocaleString();
+}
+
+// ===== 갤러리 =====
+function openGallery(){
+  var grid=document.getElementById('gallery-grid');
+  var empty=document.getElementById('gallery-empty');
+  var photoCerts=G.feed.filter(function(f){return f.isH&&f.ct==='photo';});
+  if(photoCerts.length===0){
+    grid.style.display='none';
+    empty.style.display='block';
+  } else {
+    grid.style.display='grid';
+    empty.style.display='none';
+    var emojis=['🧘‍♀️','🏋️','🌅','📚','🏃','🌿'];
+    grid.innerHTML=photoCerts.map(function(f,i){
+      return '<div style="aspect-ratio:1;background:var(--al);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;">'
+      +'<span style="font-size:28px;">'+emojis[i%6]+'</span>'
+      +'<span style="font-size:8px;color:var(--a);font-weight:600;">+'+f.xp+'XP</span>'
+      +'</div>';
+    }).join('');
+  }
+  var cnt=document.getElementById('gallery-cnt');
+  if(cnt)cnt.textContent='사진 인증 '+photoCerts.length+'장';
+  sOv('ov-gallery');
+}
+
+// ===== 크루장 DM =====
+var dmMessages=[
+  {from:'크루장',text:'안녕하세요! 오늘도 화이팅 💪',time:'어제'},
+  {from:'크루장',text:'이번 주 달성률 너무 좋아요 🔥',time:'2일 전'},
+];
+function rDMs(){
+  document.getElementById('dm-list').innerHTML=dmMessages.map(function(m){
+    var isMe=m.from==='나';
+    return '<div class="cm'+(isMe?' me':'')+'" style="margin-bottom:10px;">'
+    +'<div class="cmn">'+m.from+' · '+m.time+'</div>'
+    +'<div class="cmt">'+m.text+'</div>'
+    +'</div>';
+  }).join('');
+}
+function sendDM(){
+  var inp=document.getElementById('dm-inp');
+  if(!inp.value.trim())return;
+  dmMessages.push({from:'나',text:inp.value.trim(),time:'방금'});
+  inp.value='';
+  rDMs();
+  toast('크루장에게 메시지를 보냈어요!',2000);
+}
+
+// ===== 크루 공지 =====
+function rNotices(){
+  var defaults=[
+    {text:'이번 주 크루 챌린지: 기상 인증 5회!',time:'2일 전'},
+    {text:'다들 너무 잘하고 있어요 🔥 이번 주도 살자!',time:'5일 전'},
+  ];
+  var all=G.notices.concat(defaults);
+  document.getElementById('notice-list').innerHTML=all.map(function(n){
+    return '<div style="background:var(--al);border:1px solid var(--ab);border-radius:11px;padding:12px;margin-bottom:8px;">'
+    +'<div style="font-size:12px;color:#1a1a1a;font-weight:500;line-height:1.6;margin-bottom:4px;">'+n.text+'</div>'
+    +'<div style="font-size:9px;color:var(--am);">'+n.time+'</div>'
+    +'</div>';
+  }).join('');
+}
+function postNotice(){
+  var inp=document.getElementById('notice-inp');
+  if(!inp.value.trim())return;
+  G.notices.unshift({text:inp.value.trim(),time:'방금'});
+  inp.value='';
+  rNotices();
+  toast('공지를 올렸어요! 📢',2000);
+}
+
+
+// ===== 다크모드 =====
+var isDark=false;
+function toggleDark(){
+  isDark=!isDark;
+  var phone=document.getElementById('phone');
+  if(phone)phone.classList.toggle('dark',isDark);
+  document.body.style.background=isDark?'#111':'#e8e8e4';
+  var btn=document.getElementById('dark-btn');
+  if(btn)btn.textContent=isDark?'☀️':'🌙';
+  toast(isDark?'다크모드 켜짐 🌙':'라이트모드 켜짐 ☀️',1500);
+}
+
+// ===== 알림 토글 =====
+function toggleNotif(el){
+  var on=el.style.background!=='rgb(232, 232, 228)' && el.style.background!=='#e8e8e4';
+  var dot=el.querySelector('div');
+  if(on){
+    el.style.background='#e8e8e4';
+    if(dot){dot.style.right='auto';dot.style.left='3px';}
+    toast('알림 꺼짐 🔕',1500);
+  } else {
+    el.style.background='var(--a)';
+    if(dot){dot.style.left='auto';dot.style.right='3px';}
+    toast('알림 켜짐 🔔',1500);
+  }
+}
+
+// ===== 커스텀 습관 =====
+var customHabitCat='운동';
+function toggleCustomHabitForm(){
+  var f=document.getElementById('custom-habit-form');
+  if(f)f.style.display=f.style.display==='none'||f.style.display===''?'block':'none';
+}
+function selHabitCat(btn,cat){
+  customHabitCat=cat;
+  document.querySelectorAll('.hcat-btn').forEach(function(b){
+    b.style.background='#fff';b.style.color='#666';b.style.border='1px solid #e0e0dc';
+  });
+  btn.style.background='var(--a)';btn.style.color='#fff';btn.style.border='none';
+}
+function addCustomHabit(){
+  var titleEl=document.getElementById('custom-habit-title');
+  if(!titleEl)return;
+  var title=titleEl.value.trim();
+  if(!title){toast('습관 이름을 입력해주세요',1500);return;}
+  if(habits.length>=8){toast('습관은 최대 8개까지 추가할 수 있어요',2000);return;}
+  var xpEl=document.getElementById('custom-habit-xp');
+  var xp=xpEl?parseInt(xpEl.value)||80:80;
+  var cm=cM[customHabitCat]||cM['기타'];
+  var ids=habits.map(function(h){return h.id;});
+  var newId=ids.length>0?Math.max.apply(null,ids)+1:100;
+  habits.push({id:newId,t:title,ic:cm.i,c:customHabitCat,x:xp,done:false,ct:null,cert:false,ph:false,txt:'',custom:true});
+  titleEl.value='';
+  toggleCustomHabitForm();
+  rHabits();
+  toast('"'+title+'" 습관이 추가됐어요! 💪',2000);
+}
+
+function swCT(tab,btn){document.querySelectorAll('.cpanel').forEach(function(p){p.classList.remove('on');});document.getElementById('cr-'+tab).classList.add('on');document.querySelectorAll('.citbar .itb').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');}
+</script>
+</body>
+</html>
